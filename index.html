@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>คลังหนังสือเรียน E-Book | โรงเรียนคงคาราม</title>
+
+  <!-- เริ่มต้นส่วนตั้งค่า PWA / ไอคอนบนมือถือ -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#1a73e8">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Fix1204">
+    <link rel="apple-touch-icon" href="./icon-192x192.png">
+  <!-- สิ้นสุดส่วนตั้งค่า PWA / ไอคอนบนมือถือ -->
+
+  <link rel="icon" type="image/png" href="https://i.ibb.co/GQqkFPsY/jaae-PNGTran-small.png" />
+
+  <!-- Google Fonts: Prompt -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- PDF.js & StPageFlip -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Prompt', 'sans-serif'] },
+          colors: {
+            mint: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 500: '#22c55e', 600: '#16a34a' },
+            lemon: { 50: '#fefce8', 100: '#fef9c3', 200: '#fef08a', 400: '#facc15', 500: '#eab308' }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      background: linear-gradient(135deg, #ecfdf5 0%, #f7fee7 50%, #fefce8 100%);
+      min-height: 100vh;
+      color: #1e293b;
+    }
+    .pastel-header {
+      background: linear-gradient(120deg, #bbf7d0 0%, #d9f99d 55%, #fef08a 100%);
+    }
+    .pastel-btn {
+      background: linear-gradient(135deg, #22c55e 0%, #84cc16 100%);
+      transition: all 0.2s ease;
+    }
+    .pastel-btn:hover {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px -4px rgba(34, 197, 94, 0.35);
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+    }
+    .book-card {
+      transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .book-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 25px -5px rgba(22, 163, 74, 0.14), 0 8px 10px -6px rgba(234, 179, 8, 0.1);
+    }
+    .page-canvas-wrapper {
+      background: #ffffff;
+      box-shadow: inset 0 0 18px rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    ::-webkit-scrollbar { width: 7px; height: 7px; }
+    ::-webkit-scrollbar-track { background: #f0fdf4; }
+    ::-webkit-scrollbar-thumb { background: #86efac; border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: #4ade80; }
+  </style>
+</head>
+<body class="antialiased selection:bg-emerald-200 selection:text-emerald-900">
+
+  <!-- ==================== TOP NAVIGATION ==================== -->
+  <header class="pastel-header sticky top-0 z-30 shadow-sm border-b border-emerald-200/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <img src="https://i.ibb.co/GQqkFPsY/jaae-PNGTran-small.png" alt="Logo" class="w-11 h-11 rounded-2xl bg-white/80 p-1 shadow-sm object-contain">
+        <div>
+          <h1 id="ui-school-title" class="text-lg sm:text-xl font-bold text-emerald-950 leading-tight">
+            คลังหนังสือเรียน E-Book
+          </h1>
+          <p id="ui-teacher-sub" class="text-xs sm:text-sm text-emerald-800/80 font-medium">
+            โรงเรียนคงคาราม • ห้องปฏิบัติการคอมพิวเตอร์ 1204
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2.5">
+        <span id="realtime-sync-status" class="hidden md:inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/80 text-emerald-800 border border-emerald-200">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Real-time Sync
+        </span>
+        <span id="connection-badge" class="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/75 text-emerald-800 border border-emerald-200">
+          <span class="w-2 h-2 rounded-full bg-amber-400"></span> โหมดสาธิต
+        </span>
+        <button onclick="openAdminModal()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/90 hover:bg-white text-emerald-900 font-semibold text-sm shadow-sm border border-emerald-200/80 transition">
+          <i data-lucide="settings" class="w-4 h-4 text-emerald-600"></i>
+          <span>จัดการระบบ (Admin)</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN STUDENT VIEW ==================== -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    
+    <!-- Search & Filter Bar -->
+    <div class="glass-card rounded-3xl p-4 sm:p-6 shadow-sm mb-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <i data-lucide="book-open-check" class="w-5 h-5 text-emerald-600"></i>
+            เลือกเอกสารประกอบการเรียน / ใบความรู้
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">แตะที่หน้าปกหนังสือเพื่อเปิดอ่านแบบพลิกหน้าเสมือนจริง รองรับมือถือ แท็บเล็ต และคอมพิวเตอร์</p>
+        </div>
+        
+        <div class="relative w-full md:w-80">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input type="text" id="search-input" oninput="renderBooks()" placeholder="ค้นหาชื่อหนังสือ หรือหน่วยการเรียนรู้..."
+            class="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white border border-emerald-200/80 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
+        </div>
+      </div>
+
+      <!-- Subject Tabs -->
+      <div id="subject-tabs" class="flex items-center gap-2 overflow-x-auto pb-1"></div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loading-state" class="hidden py-16 text-center">
+      <div class="inline-block w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
+      <p class="text-sm font-medium text-emerald-800">กำลังเชื่อมต่อและติดตั้งฐานข้อมูลอัตโนมัติ...</p>
+    </div>
+
+    <!-- Books Grid -->
+    <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden glass-card rounded-3xl p-12 text-center">
+      <div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+        <i data-lucide="library" class="w-8 h-8"></i>
+      </div>
+      <h3 class="text-base font-bold text-slate-700">ยังไม่มีเอกสารในหมวดหมู่นี้</h3>
+      <p class="text-sm text-slate-500 mt-1">ลองเลือกรายวิชาอื่น หรือเพิ่มหนังสือใหม่ในเมนูจัดการระบบ</p>
+    </div>
+  </main>
+
+  <!-- ==================== 3D FLIPBOOK READER MODAL ==================== -->
+  <div id="reader-modal" class="fixed inset-0 z-50 hidden bg-slate-900/95 backdrop-blur-md flex flex-col">
+    <div class="bg-slate-900/90 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between text-white">
+      <div class="flex items-center gap-3 min-w-0">
+        <span id="reader-subject-badge" class="hidden sm:inline-block text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+          รายวิชา
+        </span>
+        <h3 id="reader-title" class="text-sm sm:text-base font-semibold truncate">ชื่อหนังสือ</h3>
+      </div>
+
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <button onclick="changeZoom(-0.15)" title="ย่อขนาด" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
+          <i data-lucide="zoom-out" class="w-4 h-4"></i>
+        </button>
+        <span id="zoom-label" class="text-xs font-mono w-12 text-center text-slate-300">100%</span>
+        <button onclick="changeZoom(0.15)" title="ขยายขนาด" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
+          <i data-lucide="zoom-in" class="w-4 h-4"></i>
+        </button>
+        <button onclick="resetZoom()" title="ขนาดปกติ" class="hidden sm:inline-flex p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
+          <i data-lucide="maximize-2" class="w-4 h-4"></i>
+        </button>
+        <div class="w-px h-5 bg-slate-700 mx-1"></div>
+        <button onclick="closeReader()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/90 hover:bg-rose-500 text-white text-xs sm:text-sm font-semibold transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+          <span>ปิดหนังสือ</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="flipbook-viewport" class="flex-1 relative overflow-auto flex items-center justify-center p-2 sm:p-6 select-none">
+      <div id="reader-loading" class="text-center text-white">
+        <div class="w-12 h-12 border-4 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin mx-auto mb-3"></div>
+        <p id="reader-loading-text" class="text-sm text-emerald-200">กำลังจัดเตรียมหน้าหนังสือ E-Book...</p>
+      </div>
+      
+      <div id="zoom-wrapper" class="transition-transform duration-150 origin-center flex items-center justify-center">
+        <div id="flipbook-mount"></div>
+      </div>
+    </div>
+
+    <div class="bg-slate-900/90 border-t border-slate-800 px-4 py-2.5 flex items-center justify-center gap-4 text-white">
+      <button onclick="flipPrev()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-emerald-600 text-xs sm:text-sm font-medium transition">
+        <i data-lucide="chevron-left" class="w-4 h-4"></i> หน้าก่อนหน้า
+      </button>
+      <span id="page-indicator" class="text-xs sm:text-sm font-medium text-emerald-300 bg-slate-800/90 px-4 py-1.5 rounded-xl border border-slate-700">
+        หน้า 1 / 1
+      </span>
+      <button onclick="flipNext()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-emerald-600 text-xs sm:text-sm font-medium transition">
+        หน้าถัดไป <i data-lucide="chevron-right" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== ADMIN LOGIN MODAL ==================== -->
+  <div id="pin-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-emerald-100">
+      <div class="w-12 h-12 rounded-2xl pastel-header flex items-center justify-center text-emerald-800 mx-auto mb-3">
+        <i data-lucide="lock" class="w-6 h-6"></i>
+      </div>
+      <h3 class="text-lg font-bold text-center text-slate-800">เข้าสู่ระบบจัดการหลังบ้าน</h3>
+      <p class="text-xs text-center text-slate-500 mt-1 mb-4">กรุณากรอกรหัส PIN สำหรับคุณครู (ค่าเริ่มต้น: 123456)</p>
+      
+      <input type="password" id="admin-pin-input" onkeyup="if(event.key==='Enter') verifyPin()" placeholder="••••••"
+        class="w-full text-center text-xl tracking-widest font-bold py-3 rounded-2xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 mb-4">
+      
+      <div class="flex gap-2">
+        <button onclick="closePinModal()" class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm">ยกเลิก</button>
+        <button onclick="verifyPin()" class="flex-1 py-2.5 rounded-xl pastel-btn text-white font-semibold text-sm">เข้าสู่ระบบ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ADMIN DASHBOARD MODAL ==================== -->
+  <div id="admin-modal" class="fixed inset-0 z-40 hidden bg-slate-900/60 backdrop-blur-sm overflow-y-auto p-3 sm:p-6">
+    <div class="max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl border border-emerald-100 overflow-hidden my-4">
+      
+      <div class="pastel-header px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/90 flex items-center justify-center text-emerald-700 shadow-sm">
+            <i data-lucide="sliders-horizontal" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-emerald-950">ระบบจัดการหลังบ้าน (Admin Panel)</h2>
+            <p class="text-xs text-emerald-800">บันทึก/แก้ไข/ลบ ลง Google Sheets ทันทีแบบ Real-time</p>
+          </div>
+        </div>
+        <button onclick="closeAdminModal()" class="p-2 rounded-xl bg-white/80 hover:bg-white text-slate-700 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Admin Navigation Tabs -->
+      <div class="bg-emerald-50/70 px-6 pt-3 border-b border-emerald-100 flex gap-2 overflow-x-auto">
+        <button onclick="switchAdminTab('books')" id="tab-btn-books" class="admin-tab px-4 py-2.5 rounded-t-xl text-sm font-semibold bg-white text-emerald-700 border-t border-x border-emerald-100">
+          📚 จัดการหนังสือ E-Book
+        </button>
+        <button onclick="switchAdminTab('subjects')" id="tab-btn-subjects" class="admin-tab px-4 py-2.5 rounded-t-xl text-sm font-semibold text-slate-600 hover:text-emerald-700">
+          🏷️ จัดการรายวิชา
+        </button>
+        <button onclick="switchAdminTab('system')" id="tab-btn-system" class="admin-tab px-4 py-2.5 rounded-t-xl text-sm font-semibold text-slate-600 hover:text-emerald-700">
+          ⚙️ ติดตั้งฐานข้อมูล / พาท PDF / Backup & Restore
+        </button>
+      </div>
+
+      <div class="p-6">
+        <!-- TAB 1: MANAGE BOOKS -->
+        <div id="admin-tab-books" class="space-y-6">
+          <form id="book-form" onsubmit="handleSaveBook(event)" class="bg-emerald-50/40 p-5 rounded-2xl border border-emerald-100 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 id="book-form-title" class="font-bold text-emerald-900 text-base">+ เพิ่มหนังสือ E-Book ใหม่</h3>
+              <button type="button" onclick="resetBookForm()" class="text-xs text-slate-500 hover:text-emerald-700 underline">ล้างฟอร์ม</button>
+            </div>
+            <input type="hidden" id="book-id">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่อหนังสือ / ใบความรู้ *</label>
+                <input type="text" id="book-title" required placeholder="เช่น หน่วยที่ 1 แนวคิดเชิงคำนวณ"
+                  class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">รายวิชา *</label>
+                <select id="book-subject" required class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white"></select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">คำอธิบายย่อ</label>
+              <input type="text" id="book-desc" placeholder="รายละเอียดเนื้อหา ระดับชั้น หรือสัปดาห์ที่เรียน"
+                class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">อัปโหลดไฟล์ PDF จากเครื่อง (สร้างปกให้อัตโนมัติ)</label>
+                <input type="file" id="book-file" accept="application/pdf" onchange="previewPdfCover(this)"
+                  class="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">หรือ วางลิงก์ / File ID จาก Google Drive</label>
+                <input type="text" id="book-fileid" placeholder="วางลิงก์แชร์ Google Drive หรือ File ID"
+                  class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white">
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-4 pt-2">
+              <label class="inline-flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="book-visible" checked class="w-4 h-4 accent-emerald-600 rounded">
+                <span class="text-sm font-medium text-slate-700">เผยแพร่ให้นักเรียนเห็นทันที</span>
+              </label>
+
+              <button type="submit" id="btn-save-book" class="px-6 py-2.5 rounded-xl pastel-btn text-white font-semibold text-sm shadow-sm">
+                บันทึกหนังสือ E-Book
+              </button>
+            </div>
+          </form>
+
+          <div class="overflow-x-auto border border-emerald-100 rounded-2xl">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-emerald-50 text-emerald-900 font-semibold">
+                <tr>
+                  <th class="p-3">ชื่อเอกสาร</th>
+                  <th class="p-3">รายวิชา</th>
+                  <th class="p-3 text-center">ยอดอ่าน</th>
+                  <th class="p-3 text-center">สถานะ (คลิกสลับ)</th>
+                  <th class="p-3 text-right">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="admin-books-tbody" class="divide-y divide-emerald-50"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 2: MANAGE SUBJECTS -->
+        <div id="admin-tab-subjects" class="hidden space-y-6">
+          <form onsubmit="handleSaveSubject(event)" class="bg-lemon-50/60 p-5 rounded-2xl border border-lemon-200 grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+            <input type="hidden" id="sub-id">
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่อรายวิชา *</label>
+              <input type="text" id="sub-name" required placeholder="เช่น วิทยาการคำนวณ ม.2" class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">ระดับชั้น / สีแท็ก</label>
+              <div class="flex gap-2">
+                <input type="text" id="sub-level" placeholder="ม.2" class="w-full px-3 py-2 rounded-xl border border-emerald-200 text-sm bg-white">
+                <input type="color" id="sub-color" value="#10b981" class="w-11 h-9 rounded-xl border border-emerald-200 cursor-pointer">
+              </div>
+            </div>
+            <button type="submit" class="py-2 px-4 rounded-xl pastel-btn text-white font-semibold text-sm">บันทึกรายวิชา</button>
+          </form>
+
+          <div id="admin-subjects-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+        </div>
+
+        <!-- TAB 3: SYSTEM SETTINGS, AUTO-INSTALL DB, DRIVE PATH, BACKUP & RESTORE -->
+        <div id="admin-tab-system" class="hidden space-y-6">
+          
+          <div class="bg-emerald-50/40 p-5 rounded-2xl border border-emerald-100 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="font-bold text-emerald-950 text-base flex items-center gap-2">
+                <i data-lucide="database" class="w-5 h-5 text-emerald-600"></i>
+                1. ตั้งค่าการเชื่อมต่อ & ติดตั้งฐานข้อมูล Google Sheets อัตโนมัติ
+              </h3>
+              <button type="button" onclick="autoInstallDatabaseNow()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm">
+                <i data-lucide="wand-2" class="w-3.5 h-3.5"></i> ติดตั้งฐานข้อมูลอัตโนมัติทันที
+              </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="md:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Google Apps Script Web App URL (SCRIPT_URL)</label>
+                <input type="url" id="cfg-script-url" placeholder="https://script.google.com/macros/s/...../exec"
+                  class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white font-mono">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Google Sheet ID (เว้นว่างเพื่อให้ระบบสร้างให้อัตโนมัติ)</label>
+                <input type="text" id="cfg-sheet-id" placeholder="ระบบจะเติมให้อัตโนมัติเมื่อเชื่อมต่อสำเร็จ"
+                  class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white font-mono">
+                <div id="active-sheet-info" class="text-[11px] text-emerald-700 mt-1"></div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">พาทที่เก็บไฟล์ PDF (Google Drive Folder ID หรือ URL โฟลเดอร์)</label>
+                <input type="text" id="cfg-folder-id" placeholder="วางลิงก์โฟลเดอร์ Google Drive หรือ Folder ID"
+                  class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white font-mono">
+                <p id="active-folder-info" class="text-[11px] text-emerald-700 mt-1"></p>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่อหน่วยงาน / โรงเรียน</label>
+                <input type="text" id="cfg-school-name" class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">เปลี่ยนรหัส PIN ผู้ดูแลระบบ</label>
+                <input type="text" id="cfg-admin-pin" placeholder="123456" class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white font-mono">
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <button type="button" onclick="copyStudentShareLink()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 text-xs sm:text-sm font-semibold">
+                <i data-lucide="share-2" class="w-4 h-4"></i> คัดลอกลิงก์พร้อมค่าตั้งค่า (สำหรับส่งให้นักเรียน)
+              </button>
+              <button type="button" onclick="saveSystemConfig()" class="px-6 py-2.5 rounded-xl pastel-btn text-white font-semibold text-sm">
+                บันทึกการตั้งค่าทั้งหมด
+              </button>
+            </div>
+          </div>
+
+          <!-- Backup, Restore & Delete Database -->
+          <div class="bg-amber-50/50 p-5 rounded-2xl border border-amber-200/80 space-y-4">
+            <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+              <i data-lucide="hard-drive-download" class="w-5 h-5 text-amber-600"></i>
+              2. สำรองข้อมูล (Backup), กู้คืน (Restore) และล้างฐานข้อมูล (Delete)
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="bg-white p-4 rounded-2xl border border-emerald-100 flex flex-col justify-between">
+                <div>
+                  <h4 class="font-bold text-sm text-emerald-900">สำรองฐานข้อมูล (Backup)</h4>
+                  <p class="text-xs text-slate-500 mt-1">ดาวน์โหลดข้อมูลรายวิชา รายการหนังสือ สถิติยอดอ่าน และการตั้งค่าเป็นไฟล์ .JSON</p>
+                </div>
+                <button onclick="handleBackup()" class="mt-4 w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5">
+                  <i data-lucide="download" class="w-4 h-4"></i> ดาวน์โหลดไฟล์ Backup
+                </button>
+              </div>
+
+              <div class="bg-white p-4 rounded-2xl border border-sky-100 flex flex-col justify-between">
+                <div>
+                  <h4 class="font-bold text-sm text-sky-900">กู้คืนฐานข้อมูล (Restore)</h4>
+                  <p class="text-xs text-slate-500 mt-1">นำเข้าไฟล์ .JSON ที่สำรองไว้เพื่อกู้คืนข้อมูลทั้งหมดกลับเข้า Google Sheets</p>
+                </div>
+                <label class="mt-4 w-full py-2 px-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer">
+                  <i data-lucide="upload" class="w-4 h-4"></i> เลือกไฟล์กู้คืน (.JSON)
+                  <input type="file" accept=".json" onchange="handleRestore(this)" class="hidden">
+                </label>
+              </div>
+
+              <div class="bg-white p-4 rounded-2xl border border-rose-200 flex flex-col justify-between">
+                <div>
+                  <h4 class="font-bold text-sm text-rose-700">ล้างฐานข้อมูล (Delete)</h4>
+                  <p class="text-xs text-slate-500 mt-1">ลบข้อมูลหนังสือหรือล้างฐานข้อมูลเริ่มต้นใหม่ (ต้องยืนยันรหัส PIN)</p>
+                </div>
+                <div class="mt-4 flex gap-2">
+                  <button onclick="handleResetDatabase('books')" class="flex-1 py-2 px-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs font-semibold">
+                    ลบหนังสือทั้งหมด
+                  </button>
+                  <button onclick="handleResetDatabase('all')" class="flex-1 py-2 px-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold">
+                    ล้างทั้งหมด
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== NOTIFICATION MODAL ==================== -->
+  <div id="msg-modal" class="fixed inset-0 z-[60] hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-emerald-100 text-center">
+      <div id="msg-icon" class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+        <i data-lucide="info" class="w-6 h-6"></i>
+      </div>
+      <h4 id="msg-title" class="text-base font-bold text-slate-800">แจ้งเตือน</h4>
+      <p id="msg-body" class="text-xs text-slate-600 mt-1.5 mb-5 whitespace-pre-line"></p>
+      <button onclick="closeMsgModal()" class="w-full py-2.5 rounded-xl pastel-btn text-white font-semibold text-sm">ตกลง</button>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const DEFAULT_CONFIG = {
+      scriptUrl: "",
+      sheetId: "",
+      folderId: ""
+    };
+
+    const DEMO_DATA = {
+      subjects: [
+        { id: "SUB-01", name: "วิทยาการคำนวณ ม.2", level: "ม.2", color: "#10b981", order: 1 },
+        { id: "SUB-02", name: "วิทยาการคำนวณ ม.4", level: "ม.4", color: "#0ea5e9", order: 2 },
+        { id: "SUB-03", name: "ระบบคอมพิวเตอร์และ IoT", level: "ม.2 - ม.4", color: "#eab308", order: 3 }
+      ],
+      books: [
+        {
+          id: "DEMO-1",
+          subjectId: "SUB-01",
+          title: "ใบความรู้ที่ 1 แนวคิดเชิงคำนวณ (ทดลองเปิดอ่าน E-Book)",
+          description: "คลิกเพื่อทดสอบการเปิดอ่านแบบพลิกหน้ากระดาษ 3D รองรับทัชสกรีน เมาส์ และคีย์บอร์ด",
+          fileId: "DEMO",
+          cover: "",
+          views: 128,
+          visible: true
+        },
+        {
+          id: "DEMO-2",
+          subjectId: "SUB-02",
+          title: "คู่มือการเขียนโปรแกรม Python เบื้องต้น",
+          description: "โครงสร้างควบคุม เงื่อนไข และวนซ้ำ ระดับชั้นมัธยมศึกษาปีที่ 4",
+          fileId: "DEMO",
+          cover: "",
+          views: 94,
+          visible: true
+        },
+        {
+          id: "DEMO-3",
+          subjectId: "SUB-03",
+          title: "การเชื่อมต่อ ESP32 & เซ็นเซอร์อัจฉริยะ",
+          description: "เอกสารประกอบการเรียนห้องปฏิบัติการคอมพิวเตอร์ 1204",
+          fileId: "DEMO",
+          cover: "",
+          views: 156,
+          visible: true
+        }
+      ],
+      settings: {
+        SchoolName: "โรงเรียนคงคาราม",
+        TeacherName: "ครูศรันย์กรณ์ อาจณรงค์กร (คุณจ๊ะเอ๋)",
+        AdminPIN: "123456"
+      }
+    };
+
+    let state = {
+      config: loadLocalConfig(),
+      subjects: [],
+      books: [],
+      settings: {},
+      selectedSubject: "ALL",
+      pendingCoverBase64: "",
+      pageFlip: null,
+      zoom: 1,
+      activeSheetId: "",
+      activeSheetUrl: "",
+      activeFolderId: "",
+      activeFolderName: ""
+    };
+
+    function setSyncStatus(mode, text) {
+      const el = document.getElementById("realtime-sync-status");
+      if (!el) return;
+      if (mode === "syncing") {
+        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span> ${text || "กำลังบันทึกลง Google Sheets..."}`;
+        el.className = "inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300";
+      } else if (mode === "error") {
+        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span> ${text || "ซิงค์ข้อมูลขัดข้อง"}`;
+        el.className = "inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300";
+      } else {
+        const timeStr = new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> ซิงค์ล่าสุด ${timeStr}`;
+        el.className = "inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/85 text-emerald-800 border border-emerald-200";
+      }
+    }
+
+    async function postRealtimeAction(payload) {
+      if (!state.config.scriptUrl) {
+        throw new Error("กรุณาระบุ Google Apps Script URL ในหน้าตั้งค่าก่อนใช้งาน");
+      }
+      setSyncStatus("syncing", "กำลังบันทึกลง Google Sheets...");
+      try {
+        const res = await fetch(state.config.scriptUrl, {
+          method: "POST",
+          body: JSON.stringify({
+            ...payload,
+            sheetId: payload.sheetId !== undefined ? payload.sheetId : state.config.sheetId,
+            folderId: payload.folderId !== undefined ? payload.folderId : state.config.folderId
+          })
+        });
+        const result = await res.json();
+        if (result.status !== "success") throw new Error(result.message);
+
+        if (result.latestData && result.latestData.status === "success") {
+          applyServerData(result.latestData);
+          renderAll();
+          if (!document.getElementById("admin-modal").classList.contains("hidden")) {
+            populateAdminData();
+          }
+        }
+        setSyncStatus("done");
+        return result;
+      } catch (err) {
+        setSyncStatus("error", "บันทึกไม่สำเร็จ");
+        throw err;
+      }
+    }
+
+    function applyServerData(data) {
+      state.subjects = data.subjects;
+      state.books = data.books;
+      state.settings = data.settings;
+      state.activeSheetId = data.activeSheetId || "";
+      state.activeSheetUrl = data.activeSheetUrl || "";
+      state.activeFolderId = data.activeFolderId || "";
+      state.activeFolderName = data.activeFolderName || "";
+
+      if (!state.config.sheetId && state.activeSheetId) state.config.sheetId = state.activeSheetId;
+      if (!state.config.folderId && state.activeFolderId) state.config.folderId = state.activeFolderId;
+      localStorage.setItem("ebook_sys_config", JSON.stringify(state.config));
+    }
+
+    function showMessage(title, body, isError = false) {
+      document.getElementById("msg-title").textContent = title;
+      document.getElementById("msg-body").textContent = body;
+      const iconBox = document.getElementById("msg-icon");
+      iconBox.className = isError
+        ? "w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3"
+        : "w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3";
+      document.getElementById("msg-modal").classList.remove("hidden");
+    }
+
+    function closeMsgModal() {
+      document.getElementById("msg-modal").classList.add("hidden");
+    }
+
+    function loadLocalConfig() {
+      const params = new URLSearchParams(window.location.search);
+      const saved = JSON.parse(localStorage.getItem("ebook_sys_config") || "{}");
+      
+      const merged = {
+        scriptUrl: params.get("api") || saved.scriptUrl || DEFAULT_CONFIG.scriptUrl,
+        sheetId: params.get("sid") || saved.sheetId || DEFAULT_CONFIG.sheetId,
+        folderId: params.get("fid") || saved.folderId || DEFAULT_CONFIG.folderId
+      };
+      localStorage.setItem("ebook_sys_config", JSON.stringify(merged));
+      return merged;
+    }
+
+    function extractDriveId(input) {
+      if (!input) return "";
+      const match = input.trim().match(/[-\w]{25,}/);
+      return match ? match[0] : input.trim();
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      fetchLibraryData();
+      setInterval(() => {
+        if (state.config.scriptUrl && document.hidden === false) {
+          fetchLibraryData(true);
+        }
+      }, 30000);
+    });
+
+    async function fetchLibraryData(silent = false) {
+      const badge = document.getElementById("connection-badge");
+      if (!state.config.scriptUrl) {
+        state.subjects = DEMO_DATA.subjects;
+        state.books = DEMO_DATA.books;
+        state.settings = DEMO_DATA.settings;
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span> โหมดพรีวิวสาธิต (รหัส PIN: 123456)`;
+        renderAll();
+        return;
+      }
+
+      if (!silent) {
+        document.getElementById("loading-state").classList.remove("hidden");
+        document.getElementById("books-grid").innerHTML = "";
+      }
+
+      try {
+        const url = new URL(state.config.scriptUrl);
+        url.searchParams.set("action", "getData");
+        url.searchParams.set("_t", Date.now());
+        if (state.config.sheetId) url.searchParams.set("sheetId", state.config.sheetId);
+        if (state.config.folderId) url.searchParams.set("folderId", state.config.folderId);
+
+        const res = await fetch(url.toString());
+        const data = await res.json();
+        if (data.status === "success") {
+          applyServerData(data);
+          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> เชื่อมต่อ Google Sheets แล้ว`;
+          setSyncStatus("done");
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (err) {
+        if (!silent) {
+          showMessage("การเชื่อมต่อขัดข้อง", "ไม่สามารถเชื่อมต่อฐานข้อมูลได้: " + err.message, true);
+          state.subjects = DEMO_DATA.subjects;
+          state.books = DEMO_DATA.books;
+          state.settings = DEMO_DATA.settings;
+        }
+      } finally {
+        if (!silent) document.getElementById("loading-state").classList.add("hidden");
+        renderAll();
+      }
+    }
+
+    async function autoInstallDatabaseNow() {
+      const scriptUrl = document.getElementById("cfg-script-url").value.trim();
+      if (!scriptUrl) {
+        return showMessage("แจ้งเตือน", "กรุณาวาง Google Apps Script Web App URL ก่อนกดติดตั้งฐานข้อมูลอัตโนมัติ", true);
+      }
+
+      try {
+        const url = new URL(scriptUrl);
+        url.searchParams.set("action", "initAuto");
+        const res = await fetch(url.toString());
+        const data = await res.json();
+        if (data.status !== "success") throw new Error(data.message);
+
+        state.config.scriptUrl = scriptUrl;
+        state.config.sheetId = data.sheetId;
+        state.config.folderId = data.folderId;
+        localStorage.setItem("ebook_sys_config", JSON.stringify(state.config));
+
+        await fetchLibraryData();
+        populateAdminData();
+        showMessage("ติดตั้งฐานข้อมูลอัตโนมัติสำเร็จ!", `สร้างไฟล์ Google Sheets และโฟลเดอร์เก็บ PDF เรียบร้อยแล้ว\nSheet ID: ${data.sheetId}`);
+      } catch (err) {
+        showMessage("ติดตั้งไม่สำเร็จ", err.message, true);
+      }
+    }
+
+    function renderAll() {
+      if (state.settings.SchoolName) {
+        document.getElementById("ui-school-title").textContent = "คลังหนังสือเรียน E-Book • " + state.settings.SchoolName;
+      }
+      renderSubjectTabs();
+      renderBooks();
+      lucide.createIcons();
+    }
+
+    function renderSubjectTabs() {
+      const container = document.getElementById("subject-tabs");
+      let html = `
+        <button onclick="selectSubject('ALL')" class="px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold whitespace-nowrap transition ${
+          state.selectedSubject === 'ALL' ? 'pastel-btn text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-emerald-50 border border-emerald-100'
+        }">
+          ทั้งหมด (${state.books.filter(b => b.visible).length})
+        </button>
+      `;
+
+      state.subjects.forEach(sub => {
+        const count = state.books.filter(b => b.visible && b.subjectId === sub.id).length;
+        const active = state.selectedSubject === sub.id;
+        html += `
+          <button onclick="selectSubject('${sub.id}')" class="px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold whitespace-nowrap transition flex items-center gap-2 ${
+            active ? 'pastel-btn text-white shadow-sm' : 'bg-white text-slate-700 hover:bg-emerald-50 border border-emerald-100'
+          }">
+            <span class="w-2.5 h-2.5 rounded-full" style="background:${active ? '#fff' : sub.color}"></span>
+            ${sub.name} (${count})
+          </button>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function selectSubject(id) {
+      state.selectedSubject = id;
+      renderSubjectTabs();
+      renderBooks();
+    }
+
+    function renderBooks() {
+      const grid = document.getElementById("books-grid");
+      const empty = document.getElementById("empty-state");
+      const keyword = document.getElementById("search-input").value.toLowerCase().trim();
+
+      const filtered = state.books.filter(b => {
+        if (!b.visible) return false;
+        if (state.selectedSubject !== "ALL" && b.subjectId !== state.selectedSubject) return false;
+        if (keyword && !b.title.toLowerCase().includes(keyword) && !(b.description || "").toLowerCase().includes(keyword)) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = "";
+        empty.classList.remove("hidden");
+        return;
+      }
+
+      empty.classList.add("hidden");
+      grid.innerHTML = filtered.map(book => {
+        const sub = state.subjects.find(s => s.id === book.subjectId) || { name: "ทั่วไป", color: "#10b981" };
+        const coverHtml = book.cover
+          ? `<img src="${book.cover}" class="w-full h-full object-cover">`
+          : `<div class="w-full h-full bg-gradient-to-br from-emerald-100 via-lime-100 to-amber-100 flex flex-col items-center justify-center p-5 text-center">
+               <i data-lucide="book-open" class="w-12 h-12 text-emerald-600 mb-2"></i>
+               <span class="text-xs font-bold text-emerald-900 line-clamp-3">${book.title}</span>
+             </div>`;
+
+        return `
+          <div onclick="openBookReader('${book.id}')" class="book-card glass-card rounded-3xl overflow-hidden cursor-pointer flex flex-col">
+            <div class="aspect-[3/4] relative overflow-hidden border-b border-emerald-100">
+              ${coverHtml}
+              <span class="absolute top-3 left-3 text-[11px] font-semibold px-2.5 py-1 rounded-xl text-white shadow-sm" style="background:${sub.color}">
+                ${sub.name}
+              </span>
+            </div>
+            <div class="p-4 flex-1 flex flex-col justify-between">
+              <div>
+                <h3 class="font-bold text-slate-800 text-sm sm:text-base line-clamp-2 leading-snug">${book.title}</h3>
+                <p class="text-xs text-slate-500 mt-1 line-clamp-2">${book.description || "คลิกเพื่อเปิดอ่าน E-Book"}</p>
+              </div>
+              <div class="mt-4 pt-3 border-t border-emerald-100/80 flex items-center justify-between text-xs">
+                <span class="text-slate-500 flex items-center gap-1">
+                  <i data-lucide="eye" class="w-3.5 h-3.5 text-emerald-600"></i> ${book.views || 0} ครั้ง
+                </span>
+                <span class="font-semibold text-emerald-700 flex items-center gap-1">
+                  เปิดอ่าน <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+      lucide.createIcons();
+    }
+
+    // ==================== 3D FLIPBOOK READER ====================
+    async function openBookReader(bookId) {
+      const book = state.books.find(b => b.id === bookId);
+      if (!book) return;
+
+      const sub = state.subjects.find(s => s.id === book.subjectId);
+      document.getElementById("reader-title").textContent = book.title;
+      document.getElementById("reader-subject-badge").textContent = sub ? sub.name : "E-Book";
+      document.getElementById("reader-modal").classList.remove("hidden");
+      document.getElementById("reader-loading").classList.remove("hidden");
+      resetZoom();
+
+      book.views = (book.views || 0) + 1;
+      renderBooks();
+      if (state.config.scriptUrl && book.fileId !== "DEMO") {
+        fetch(state.config.scriptUrl, {
+          method: "POST",
+          body: JSON.stringify({ action: "incrementView", id: book.id, sheetId: state.config.sheetId })
+        }).catch(() => {});
+      }
+
+      try {
+        let pdfBytes;
+        if (book.fileId === "DEMO") {
+          pdfBytes = await createDemoPdfBytes(book.title);
+        } else {
+          document.getElementById("reader-loading-text").textContent = "กำลังดาวน์โหลดไฟล์ PDF จาก Google Drive...";
+          const url = new URL(state.config.scriptUrl);
+          url.searchParams.set("action", "getPdfBase64");
+          url.searchParams.set("fileId", book.fileId);
+          const res = await fetch(url.toString());
+          const data = await res.json();
+          if (data.status !== "success") throw new Error(data.message);
+          const bin = atob(data.base64);
+          pdfBytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) pdfBytes[i] = bin.charCodeAt(i);
+        }
+
+        await renderFlipbookFromBytes(pdfBytes);
+      } catch (err) {
+        showMessage("เปิดไฟล์ไม่สำเร็จ", err.message, true);
+        closeReader();
+      }
+    }
+
+    async function renderFlipbookFromBytes(pdfBytes) {
+      const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+      const totalPages = pdf.numPages;
+
+      if (state.pageFlip) {
+        state.pageFlip.destroy();
+        state.pageFlip = null;
+      }
+
+      const mount = document.getElementById("flipbook-mount");
+      mount.innerHTML = `<div id="flipbook-stage"></div>`;
+      const stage = document.getElementById("flipbook-stage");
+
+      const isMobile = window.innerWidth < 768;
+      const pageWidth = isMobile ? Math.min(window.innerWidth - 32, 380) : 440;
+      const pageHeight = Math.round(pageWidth * 1.414);
+
+      for (let i = 1; i <= totalPages; i++) {
+        document.getElementById("reader-loading-text").textContent = `กำลังสร้างหน้าหนังสือ ${i} / ${totalPages}...`;
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 1.8 });
+        const canvas = document.createElement("canvas");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.className = "w-full h-full object-contain";
+        await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "page-canvas-wrapper";
+        wrapper.appendChild(canvas);
+        stage.appendChild(wrapper);
+      }
+
+      document.getElementById("reader-loading").classList.add("hidden");
+
+      state.pageFlip = new St.PageFlip(stage, {
+        width: pageWidth,
+        height: pageHeight,
+        size: "fixed",
+        showCover: true,
+        usePortrait: isMobile,
+        mobileScrollSupport: false,
+        maxShadowOpacity: 0.4
+      });
+
+      state.pageFlip.loadFromHTML(document.querySelectorAll("#flipbook-stage .page-canvas-wrapper"));
+      updatePageIndicator();
+      state.pageFlip.on("flip", updatePageIndicator);
+    }
+
+    function updatePageIndicator() {
+      if (!state.pageFlip) return;
+      const cur = state.pageFlip.getCurrentPageIndex() + 1;
+      const total = state.pageFlip.getPageCount();
+      document.getElementById("page-indicator").textContent = `หน้า ${cur} / ${total}`;
+    }
+
+    function flipPrev() { if (state.pageFlip) state.pageFlip.flipPrev(); }
+    function flipNext() { if (state.pageFlip) state.pageFlip.flipNext(); }
+
+    function changeZoom(delta) {
+      state.zoom = Math.min(2.2, Math.max(0.7, state.zoom + delta));
+      document.getElementById("zoom-wrapper").style.transform = `scale(${state.zoom})`;
+      document.getElementById("zoom-label").textContent = Math.round(state.zoom * 100) + "%";
+    }
+
+    function resetZoom() {
+      state.zoom = 1;
+      document.getElementById("zoom-wrapper").style.transform = "scale(1)";
+      document.getElementById("zoom-label").textContent = "100%";
+    }
+
+    function closeReader() {
+      document.getElementById("reader-modal").classList.add("hidden");
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if (document.getElementById("reader-modal").classList.contains("hidden")) return;
+      if (e.key === "ArrowLeft") flipPrev();
+      if (e.key === "ArrowRight") flipNext();
+      if (e.key === "Escape") closeReader();
+    });
+
+    async function createDemoPdfBytes(bookTitle) {
+      const canvases = [1, 2, 3, 4].map(n => {
+        const c = document.createElement("canvas");
+        c.width = 595; c.height = 842;
+        const ctx = c.getContext("2d");
+        const grad = ctx.createLinearGradient(0, 0, 595, 842);
+        grad.addColorStop(0, n === 1 ? "#bbf7d0" : "#ffffff");
+        grad.addColorStop(1, n === 1 ? "#fef08a" : "#f0fdf4");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 595, 842);
+        ctx.fillStyle = "#065f46";
+        ctx.font = "bold 28px Prompt, sans-serif";
+        ctx.fillText(n === 1 ? "E-Book ตัวอย่างการสอน" : `เนื้อหาบทเรียน หน้าที่ ${n}`, 50, 120);
+        ctx.font = "20px Prompt, sans-serif";
+        ctx.fillStyle = "#334155";
+        ctx.fillText("• ใช้นิ้วปัดซ้าย-ขวาบนมือถือเพื่อพลิกหน้า", 50, 210);
+        ctx.fillText("• ใช้เมาส์คลิกมุมกระดาษ หรือกดปุ่มลูกศรคีย์บอร์ด", 50, 260);
+        ctx.fillText("• บันทึก/แก้ไข/ลบ ลง Google Sheets แบบ Real-time", 50, 310);
+        ctx.fillText("• รองรับ PWA ติดตั้งบนมือถือ (Fix1204)", 50, 360);
+        return c.toDataURL("image/jpeg", 0.85);
+      });
+      return buildSimplePdf(canvases);
+    }
+
+    function buildSimplePdf(dataUrls) {
+      let chunks = ["%PDF-1.3\n"];
+      let objNum = 1;
+      const pushObj = (content) => {
+        chunks.push(`${objNum} 0 obj\n${content}\nendobj\n`);
+        return objNum++;
+      };
+      const catalogId = pushObj("<< /Type /Catalog /Pages 2 0 R >>");
+      const pagesId = pushObj("PLACEHOLDER_PAGES");
+      let kids = [];
+      dataUrls.forEach(url => {
+        const raw = atob(url.split(",")[1]);
+        const imgObj = pushObj(`<< /Type /XObject /Subtype /Image /Width 595 /Height 842 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${raw.length} >>\nstream\n${raw}\nendstream`);
+        const stream = `q 595 0 0 842 0 0 cm /I0 Do Q`;
+        const contObj = pushObj(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
+        const pageObj = pushObj(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /I0 ${imgObj} 0 R >> >> /Contents ${contObj} 0 R >>`);
+        kids.push(`${pageObj} 0 R`);
+      });
+      chunks[2] = `${pagesId} 0 obj\n<< /Type /Pages /Kids [${kids.join(" ")}] /Count ${kids.length} >>\nendobj\n`;
+      let finalStr = chunks[0];
+      let realOffsets = [0];
+      for (let i = 1; i < chunks.length; i++) {
+        realOffsets[i] = finalStr.length;
+        finalStr += chunks[i];
+      }
+      const xrefPos = finalStr.length;
+      finalStr += `xref\n0 ${realOffsets.length}\n0000000000 65535 f \n`;
+      for (let i = 1; i < realOffsets.length; i++) {
+        finalStr += String(realOffsets[i]).padStart(10, "0") + " 00000 n \n";
+      }
+      finalStr += `trailer\n<< /Size ${realOffsets.length} /Root ${catalogId} 0 R >>\nstartxref\n${xrefPos}\n%%EOF`;
+      const bytes = new Uint8Array(finalStr.length);
+      for (let i = 0; i < finalStr.length; i++) bytes[i] = finalStr.charCodeAt(i) & 0xff;
+      return bytes;
+    }
+
+    // ==================== ADMIN AUTH & TABS ====================
+    function openAdminModal() {
+      document.getElementById("admin-pin-input").value = "";
+      document.getElementById("pin-modal").classList.remove("hidden");
+      setTimeout(() => document.getElementById("admin-pin-input").focus(), 100);
+    }
+
+    function closePinModal() {
+      document.getElementById("pin-modal").classList.add("hidden");
+    }
+
+    function verifyPin() {
+      const input = document.getElementById("admin-pin-input").value.trim();
+      const validPin = state.settings.AdminPIN || "123456";
+      if (input === validPin) {
+        closePinModal();
+        populateAdminData();
+        document.getElementById("admin-modal").classList.remove("hidden");
+      } else {
+        showMessage("รหัสไม่ถูกต้อง", "กรุณาตรวจสอบรหัส PIN อีกครั้ง (ค่าเริ่มต้น: 123456)", true);
+      }
+    }
+
+    function closeAdminModal() {
+      document.getElementById("admin-modal").classList.add("hidden");
+    }
+
+    function switchAdminTab(tab) {
+      ["books", "subjects", "system"].forEach(t => {
+        document.getElementById(`admin-tab-${t}`).classList.toggle("hidden", t !== tab);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        btn.className = (t === tab)
+          ? "admin-tab px-4 py-2.5 rounded-t-xl text-sm font-semibold bg-white text-emerald-700 border-t border-x border-emerald-100"
+          : "admin-tab px-4 py-2.5 rounded-t-xl text-sm font-semibold text-slate-600 hover:text-emerald-700";
+      });
+    }
+
+    function populateAdminData() {
+      const sel = document.getElementById("book-subject");
+      sel.innerHTML = state.subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
+
+      document.getElementById("admin-subjects-list").innerHTML = state.subjects.map(s => `
+        <div class="p-3.5 rounded-2xl border border-emerald-100 bg-white flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <span class="w-4 h-4 rounded-full" style="background:${s.color}"></span>
+            <div>
+              <p class="font-bold text-sm text-slate-800">${s.name}</p>
+              <p class="text-xs text-slate-500">ระดับชั้น: ${s.level || "-"}</p>
+            </div>
+          </div>
+          <button onclick="deleteSubject('${s.id}')" class="p-2 text-rose-500 hover:bg-rose-50 rounded-xl" title="ลบรายวิชา">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join("");
+
+      document.getElementById("admin-books-tbody").innerHTML = state.books.map(b => {
+        const sub = state.subjects.find(s => s.id === b.subjectId);
+        return `
+          <tr class="hover:bg-emerald-50/40">
+            <td class="p-3 font-medium text-slate-800">${b.title}</td>
+            <td class="p-3 text-xs text-slate-600">${sub ? sub.name : "-"}</td>
+            <td class="p-3 text-center font-semibold text-emerald-700">${b.views || 0}</td>
+            <td class="p-3 text-center">
+              <button onclick="toggleBookVisible('${b.id}')" title="คลิกเพื่อสลับสถานะลงชีตทันที"
+                class="text-xs px-2.5 py-1 rounded-full font-medium transition cursor-pointer ${b.visible ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}">
+                ${b.visible ? '● เผยแพร่' : '○ ซ่อนอยู่'}
+              </button>
+            </td>
+            <td class="p-3 text-right space-x-1">
+              <button onclick="editBook('${b.id}')" class="p-1.5 text-sky-600 hover:bg-sky-50 rounded-lg" title="แก้ไข">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+              </button>
+              <button onclick="deleteBook('${b.id}')" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg" title="ลบ">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      document.getElementById("cfg-script-url").value = state.config.scriptUrl || "";
+      document.getElementById("cfg-sheet-id").value = state.config.sheetId || state.activeSheetId || "";
+      document.getElementById("cfg-folder-id").value = state.config.folderId || state.activeFolderId || "";
+      document.getElementById("cfg-school-name").value = state.settings.SchoolName || "โรงเรียนคงคาราม";
+      document.getElementById("cfg-admin-pin").value = state.settings.AdminPIN || "123456";
+
+      const sheetInfoEl = document.getElementById("active-sheet-info");
+      if (state.activeSheetUrl) {
+        sheetInfoEl.innerHTML = `ฐานข้อมูลอัตโนมัติพร้อมใช้งาน: <a href="${state.activeSheetUrl}" target="_blank" class="underline font-semibold">เปิดดูไฟล์ Google Sheets</a>`;
+      } else {
+        sheetInfoEl.textContent = state.activeSheetId ? `Sheet ID: ${state.activeSheetId}` : "";
+      }
+
+      document.getElementById("active-folder-info").textContent = state.activeFolderId
+        ? `โฟลเดอร์ปลายทาง: ${state.activeFolderName} (${state.activeFolderId})` : "";
+
+      lucide.createIcons();
+    }
+
+    // ==================== BOOK & SUBJECT CRUD (REAL-TIME) ====================
+    async function previewPdfCover(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      const page = await pdf.getPage(1);
+      const vp = page.getViewport({ scale: 0.6 });
+      const canvas = document.createElement("canvas");
+      canvas.width = vp.width; canvas.height = vp.height;
+      await page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise;
+      state.pendingCoverBase64 = canvas.toDataURL("image/jpeg", 0.75);
+    }
+
+    async function handleSaveBook(e) {
+      e.preventDefault();
+      if (!state.config.scriptUrl) {
+        return showMessage("ยังไม่เชื่อมต่อฐานข้อมูล", "กรุณาวาง Google Apps Script URL ในแท็บตั้งค่าระบบก่อนครับ", true);
+      }
+
+      const btn = document.getElementById("btn-save-book");
+      btn.disabled = true; btn.textContent = "กำลังบันทึกลงชีต...";
+
+      try {
+        const fileInput = document.getElementById("book-file");
+        let pdfBase64 = "";
+        if (fileInput.files[0]) {
+          pdfBase64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(",")[1]);
+            reader.readAsDataURL(fileInput.files[0]);
+          });
+        }
+
+        const payload = {
+          action: "saveBook",
+          data: {
+            id: document.getElementById("book-id").value,
+            title: document.getElementById("book-title").value.trim(),
+            subjectId: document.getElementById("book-subject").value,
+            description: document.getElementById("book-desc").value.trim(),
+            fileId: document.getElementById("book-fileid").value.trim(),
+            pdfBase64: pdfBase64,
+            cover: state.pendingCoverBase64,
+            visible: document.getElementById("book-visible").checked
+          }
+        };
+
+        await postRealtimeAction(payload);
+        resetBookForm();
+        showMessage("บันทึกสำเร็จ", "บันทึกข้อมูลและอัปเดตลง Google Sheets ทันทีเรียบร้อยแล้ว");
+      } catch (err) {
+        showMessage("บันทึกไม่สำเร็จ", err.message, true);
+      } finally {
+        btn.disabled = false; btn.textContent = "บันทึกหนังสือ E-Book";
+      }
+    }
+
+    function editBook(id) {
+      const b = state.books.find(x => x.id === id);
+      if (!b) return;
+      document.getElementById("book-form-title").textContent = "แก้ไขข้อมูลหนังสือ E-Book";
+      document.getElementById("book-id").value = b.id;
+      document.getElementById("book-title").value = b.title;
+      document.getElementById("book-subject").value = b.subjectId;
+      document.getElementById("book-desc").value = b.description || "";
+      document.getElementById("book-fileid").value = b.fileId || "";
+      document.getElementById("book-visible").checked = b.visible;
+    }
+
+    function resetBookForm() {
+      document.getElementById("book-form").reset();
+      document.getElementById("book-id").value = "";
+      document.getElementById("book-form-title").textContent = "+ เพิ่มหนังสือ E-Book ใหม่";
+      state.pendingCoverBase64 = "";
+    }
+
+    async function deleteBook(id) {
+      try {
+        await postRealtimeAction({ action: "deleteBook", id: id });
+        showMessage("ลบข้อมูลสำเร็จ", "ลบรายการหนังสือออกจาก Google Sheets ทันทีเรียบร้อยแล้ว");
+      } catch (err) {
+        showMessage("ลบไม่สำเร็จ", err.message, true);
+      }
+    }
+
+    async function toggleBookVisible(id) {
+      try {
+        await postRealtimeAction({ action: "toggleBookVisible", id: id });
+      } catch (err) {
+        showMessage("อัปเดตสถานะไม่สำเร็จ", err.message, true);
+      }
+    }
+
+    async function handleSaveSubject(e) {
+      e.preventDefault();
+      const btn = e.target.querySelector("button[type='submit']");
+      const origText = btn.textContent;
+      btn.disabled = true; btn.textContent = "กำลังบันทึก...";
+      try {
+        await postRealtimeAction({
+          action: "saveSubject",
+          data: {
+            id: document.getElementById("sub-id").value,
+            name: document.getElementById("sub-name").value.trim(),
+            level: document.getElementById("sub-level").value.trim(),
+            color: document.getElementById("sub-color").value
+          }
+        });
+        e.target.reset();
+        document.getElementById("sub-id").value = "";
+        showMessage("บันทึกสำเร็จ", "บันทึกรายวิชาลง Google Sheets ทันทีเรียบร้อยแล้ว");
+      } catch (err) {
+        showMessage("บันทึกไม่สำเร็จ", err.message, true);
+      } finally {
+        btn.disabled = false; btn.textContent = origText;
+      }
+    }
+
+    async function deleteSubject(id) {
+      try {
+        await postRealtimeAction({ action: "deleteSubject", id: id });
+        showMessage("ลบข้อมูลสำเร็จ", "ลบรายวิชาออกจาก Google Sheets ทันทีเรียบร้อยแล้ว");
+      } catch (err) {
+        showMessage("ลบไม่สำเร็จ", err.message, true);
+      }
+    }
+
+    // ==================== SYSTEM SETTINGS, BACKUP, RESTORE, RESET ====================
+    async function saveSystemConfig() {
+      const scriptUrl = document.getElementById("cfg-script-url").value.trim();
+      const sheetId = extractDriveId(document.getElementById("cfg-sheet-id").value);
+      const folderId = extractDriveId(document.getElementById("cfg-folder-id").value);
+      const schoolName = document.getElementById("cfg-school-name").value.trim();
+      const adminPin = document.getElementById("cfg-admin-pin").value.trim();
+
+      if (adminPin.length < 4) return showMessage("รหัสสั้นเกินไป", "กรุณากำหนดรหัส PIN อย่างน้อย 4 หลัก", true);
+
+      state.config = { scriptUrl, sheetId, folderId };
+      localStorage.setItem("ebook_sys_config", JSON.stringify(state.config));
+
+      if (scriptUrl) {
+        try {
+          await postRealtimeAction({
+            action: "saveSettings",
+            sheetId: sheetId,
+            folderId: folderId,
+            data: { SchoolName: schoolName, AdminPIN: adminPin, DriveFolderId: folderId }
+          });
+          showMessage("บันทึกสำเร็จ", "บันทึกการตั้งค่าระบบและพาทจัดเก็บไฟล์ลง Google Sheets เรียบร้อยแล้ว");
+        } catch (err) {
+          showMessage("แจ้งเตือน", "บันทึกการตั้งค่าลงเครื่องแล้ว แต่ไม่สามารถอัปเดตลง Google Sheets ได้: " + err.message, true);
+        }
+      } else {
+        await fetchLibraryData();
+        populateAdminData();
+      }
+    }
+
+    function copyStudentShareLink() {
+      const shareUrl = new URL(window.location.origin + window.location.pathname);
+      if (state.config.scriptUrl) shareUrl.searchParams.set("api", state.config.scriptUrl);
+      if (state.config.sheetId) shareUrl.searchParams.set("sid", state.config.sheetId);
+      if (state.config.folderId) shareUrl.searchParams.set("fid", state.config.folderId);
+
+      navigator.clipboard.writeText(shareUrl.toString()).then(() => {
+        showMessage("คัดลอกลิงก์แล้ว", "นำลิงก์นี้ส่งให้นักเรียนได้เลย ระบบจะเชื่อมต่อฐานข้อมูลให้อัตโนมัติ");
+      });
+    }
+
+    async function handleBackup() {
+      if (!state.config.scriptUrl) return showMessage("แจ้งเตือน", "กรุณาเชื่อมต่อ Script URL ก่อนสำรองข้อมูล", true);
+      try {
+        const url = new URL(state.config.scriptUrl);
+        url.searchParams.set("action", "backup");
+        if (state.config.sheetId) url.searchParams.set("sheetId", state.config.sheetId);
+
+        const res = await fetch(url.toString());
+        const data = await res.json();
+        if (data.status !== "success") throw new Error(data.message);
+
+        const blob = new Blob([JSON.stringify(data.backup, null, 2)], { type: "application/json" });
+        const a = document.createElement("a");
+        const dateStr = new Date().toISOString().slice(0, 10);
+        a.href = URL.createObjectURL(blob);
+        a.download = `Backup_Ebook_Kongkaram_${dateStr}.json`;
+        a.click();
+      } catch (err) {
+        showMessage("สำรองข้อมูลไม่สำเร็จ", err.message, true);
+      }
+    }
+
+    async function handleRestore(input) {
+      const file = input.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const backupData = JSON.parse(text);
+        await postRealtimeAction({ action: "restore", backupData: backupData });
+        showMessage("กู้คืนสำเร็จ", "กู้คืนฐานข้อมูลจากไฟล์ Backup ลง Google Sheets เรียบร้อยแล้ว");
+      } catch (err) {
+        showMessage("กู้คืนข้อมูลไม่สำเร็จ", err.message, true);
+      } finally {
+        input.value = "";
+      }
+    }
+
+    async function handleResetDatabase(target) {
+      try {
+        await postRealtimeAction({ action: "resetDatabase", target: target });
+        showMessage("ล้างข้อมูลเรียบร้อย", "ดำเนินการล้างข้อมูลใน Google Sheets สำเร็จแล้ว");
+      } catch (err) {
+        showMessage("เกิดข้อผิดพลาด", err.message, true);
+      }
+    }
+  </script>
+</body>
+</html>
