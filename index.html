@@ -85,6 +85,8 @@
       justify-content: center;
       overflow: hidden;
     }
+    .cursor-grab-custom { cursor: grab; }
+    .cursor-grabbing-custom { cursor: grabbing !important; }
     ::-webkit-scrollbar { width: 7px; height: 7px; }
     ::-webkit-scrollbar-track { background: #f0fdf4; }
     ::-webkit-scrollbar-thumb { background: #86efac; border-radius: 99px; }
@@ -100,7 +102,7 @@
         <img src="https://i.ibb.co/GQqkFPsY/jaae-PNGTran-small.png" alt="Logo" class="w-11 h-11 rounded-2xl bg-white/80 p-1 shadow-sm object-contain">
         <div>
           <h1 id="ui-school-title" class="text-lg sm:text-xl font-bold text-emerald-950 leading-tight">
-            คลังหนังสือเรียน E-Book
+            คลังสื่อการสอน & E-Book
           </h1>
           <p id="ui-teacher-sub" class="text-xs sm:text-sm text-emerald-800/80 font-medium">
             โรงเรียนคงคาราม • ห้องปฏิบัติการคอมพิวเตอร์ 1204
@@ -108,20 +110,35 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2.5">
-        <span id="realtime-sync-status" class="hidden md:inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/80 text-emerald-800 border border-emerald-200">
+      <div class="flex items-center gap-2">
+        <button onclick="fetchLibraryData(false)" title="ซิงค์ข้อมูลล่าสุดจาก Google Sheets ทันที" id="realtime-sync-status" class="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/85 hover:bg-white text-emerald-800 border border-emerald-200 transition cursor-pointer">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Real-time Sync
-        </span>
-        <span id="connection-badge" class="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/75 text-emerald-800 border border-emerald-200">
-          <span class="w-2 h-2 rounded-full bg-amber-400"></span> โหมดสาธิต
-        </span>
-        <button onclick="openAdminModal()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/90 hover:bg-white text-emerald-900 font-semibold text-sm shadow-sm border border-emerald-200/80 transition">
+        </button>
+        <button onclick="openAdminModal()" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/90 hover:bg-white text-emerald-900 font-semibold text-xs sm:text-sm shadow-sm border border-emerald-200/80 transition">
           <i data-lucide="settings" class="w-4 h-4 text-emerald-600"></i>
-          <span>จัดการระบบ (Admin)</span>
+          <span>จัดการระบบ</span>
         </button>
       </div>
     </div>
   </header>
+
+  <!-- ==================== UNCONFIGURED BANNER ==================== -->
+  <div id="setup-alert-banner" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+    <div class="bg-amber-50 border border-amber-300 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+      <div class="flex items-start gap-3">
+        <div class="p-2 rounded-xl bg-amber-100 text-amber-700 shrink-0">
+          <i data-lucide="cloud-off" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-amber-900">อุปกรณ์นี้ยังไม่ได้เชื่อมต่อฐานข้อมูล Google Sheets กลาง</h3>
+          <p class="text-xs text-amber-800 mt-0.5">หากคุณตั้งค่าบนคอมพิวเตอร์แล้ว ให้กดปุ่ม "คัดลอกลิงก์เปิดบนมือถือ" จากคอมพิวเตอร์มาเปิด หรือวาง Script URL ที่นี่</p>
+        </div>
+      </div>
+      <button onclick="openQuickConnect()" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shrink-0">
+        วาง Script URL เชื่อมต่อทันที
+      </button>
+    </div>
+  </div>
 
   <!-- ==================== MAIN STUDENT VIEW ==================== -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -132,82 +149,146 @@
         <div>
           <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
             <i data-lucide="book-open-check" class="w-5 h-5 text-emerald-600"></i>
-            เลือกเอกสารประกอบการเรียน / ใบความรู้
+            เลือกสื่อการสอนแยกตามรายวิชาและหน่วยการเรียนรู้
           </h2>
-          <p class="text-xs text-slate-500 mt-0.5">แตะที่หน้าปกหนังสือเพื่อเปิดอ่านแบบพลิกหน้าเสมือนจริง รองรับมือถือ แท็บเล็ต และคอมพิวเตอร์</p>
+          <p class="text-xs text-slate-500 mt-0.5">รวมหนังสือ E-Book คลิปวิดีโอการสอน และใบงานจัดกลุ่มตามหน่วยการเรียนรู้</p>
         </div>
         
         <div class="relative w-full md:w-80">
           <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-          <input type="text" id="search-input" oninput="renderBooks()" placeholder="ค้นหาชื่อหนังสือ หรือหน่วยการเรียนรู้..."
+          <input type="text" id="search-input" oninput="renderBooks()" placeholder="ค้นหาชื่อสื่อ หน่วยการเรียนรู้ หรือวิดีโอ..."
             class="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white border border-emerald-200/80 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
         </div>
       </div>
 
-      <!-- Subject Tabs -->
-      <div id="subject-tabs" class="flex items-center gap-2 overflow-x-auto pb-1"></div>
+      <!-- 1. Subject Tabs -->
+      <div id="subject-tabs" class="flex items-center gap-2 overflow-x-auto pb-2"></div>
+
+      <!-- 2. Learning Unit Sub-Tabs -->
+      <div id="unit-tabs-wrapper" class="hidden pt-2.5 mt-1 border-t border-emerald-100/80">
+        <div class="flex items-center gap-2 overflow-x-auto pb-1">
+          <span class="text-xs font-bold text-emerald-800 shrink-0 flex items-center gap-1">
+            <i data-lucide="layers" class="w-3.5 h-3.5"></i> หน่วยการเรียนรู้:
+          </span>
+          <div id="unit-tabs" class="flex items-center gap-1.5"></div>
+        </div>
+      </div>
+
+      <!-- 3. Media Type Filter Pills -->
+      <div id="media-type-tabs" class="flex items-center gap-2 overflow-x-auto pt-2.5 mt-1 border-t border-emerald-100/70"></div>
     </div>
 
     <!-- Loading Indicator -->
     <div id="loading-state" class="hidden py-16 text-center">
       <div class="inline-block w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
-      <p class="text-sm font-medium text-emerald-800">กำลังเชื่อมต่อและติดตั้งฐานข้อมูลอัตโนมัติ...</p>
+      <p class="text-sm font-medium text-emerald-800">กำลังซิงค์ข้อมูลล่าสุดจาก Google Sheets...</p>
     </div>
 
-    <!-- Books Grid -->
-    <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+    <!-- Books & Units Container -->
+    <div id="books-grid" class="space-y-8"></div>
 
     <!-- Empty State -->
     <div id="empty-state" class="hidden glass-card rounded-3xl p-12 text-center">
       <div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
         <i data-lucide="library" class="w-8 h-8"></i>
       </div>
-      <h3 class="text-base font-bold text-slate-700">ยังไม่มีเอกสารในหมวดหมู่นี้</h3>
-      <p class="text-sm text-slate-500 mt-1">ลองเลือกรายวิชาอื่น หรือเพิ่มหนังสือใหม่ในเมนูจัดการระบบ</p>
+      <h3 class="text-base font-bold text-slate-700">ยังไม่มีสื่อการสอนในหมวดหมู่นี้</h3>
+      <p class="text-sm text-slate-500 mt-1">ลองเลือกรายวิชา หน่วยการเรียนรู้ หรือประเภทสื่ออื่น</p>
     </div>
   </main>
 
-  <!-- ==================== 3D FLIPBOOK READER MODAL ==================== -->
-  <div id="reader-modal" class="fixed inset-0 z-50 hidden bg-slate-900/95 backdrop-blur-md flex flex-col">
-    <div class="bg-slate-900/90 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between text-white">
-      <div class="flex items-center gap-3 min-w-0">
-        <span id="reader-subject-badge" class="hidden sm:inline-block text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-          รายวิชา
+  <!-- ==================== MULTIMEDIA VIEWER MODAL ==================== -->
+  <div id="media-viewer-modal" class="fixed inset-0 z-50 hidden bg-slate-900/95 backdrop-blur-md flex flex-col">
+    <div class="bg-slate-900/95 border-b border-slate-800 px-4 py-3 flex items-center justify-between gap-3 text-white">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <span id="mv-type-badge" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+          สื่อการสอน
         </span>
-        <h3 id="reader-title" class="text-sm sm:text-base font-semibold truncate">ชื่อหนังสือ</h3>
+        <h3 id="mv-title" class="text-sm sm:text-base font-semibold truncate">ชื่อสื่อการสอน</h3>
       </div>
 
-      <div class="flex items-center gap-1.5 sm:gap-2">
-        <button onclick="changeZoom(-0.15)" title="ย่อขนาด" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
-          <i data-lucide="zoom-out" class="w-4 h-4"></i>
-        </button>
-        <span id="zoom-label" class="text-xs font-mono w-12 text-center text-slate-300">100%</span>
-        <button onclick="changeZoom(0.15)" title="ขยายขนาด" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
-          <i data-lucide="zoom-in" class="w-4 h-4"></i>
-        </button>
-        <button onclick="resetZoom()" title="ขนาดปกติ" class="hidden sm:inline-flex p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
-          <i data-lucide="maximize-2" class="w-4 h-4"></i>
-        </button>
-        <div class="w-px h-5 bg-slate-700 mx-1"></div>
-        <button onclick="closeReader()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/90 hover:bg-rose-500 text-white text-xs sm:text-sm font-semibold transition">
+      <div class="flex items-center gap-2 shrink-0">
+        <a id="mv-external-link" href="#" target="_blank" rel="noopener noreferrer"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 text-xs sm:text-sm font-medium transition">
+          <i data-lucide="external-link" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">เปิดหน้าต่างใหม่</span>
+        </a>
+        <button onclick="closeMediaViewer()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/90 hover:bg-rose-500 text-white text-xs sm:text-sm font-semibold transition">
           <i data-lucide="x" class="w-4 h-4"></i>
-          <span>ปิดหนังสือ</span>
+          <span>ปิดหน้าต่าง</span>
         </button>
       </div>
     </div>
 
-    <div id="flipbook-viewport" class="flex-1 relative overflow-auto flex items-center justify-center p-2 sm:p-6 select-none">
-      <div id="reader-loading" class="text-center text-white">
+    <div class="flex-1 relative flex items-center justify-center p-2 sm:p-6 overflow-hidden">
+      <div id="mv-container" class="w-full h-full max-w-5xl rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl flex items-center justify-center"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 3D FLIPBOOK READER MODAL ==================== -->
+  <div id="reader-modal" class="fixed inset-0 z-50 hidden bg-slate-900/95 backdrop-blur-md flex flex-col">
+    <div class="bg-slate-900/95 border-b border-slate-800 px-3 sm:px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-white z-20">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <span id="reader-subject-badge" class="hidden md:inline-block text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+          รายวิชา
+        </span>
+        <h3 id="reader-title" class="text-sm sm:text-base font-semibold truncate max-w-[180px] sm:max-w-xs">ชื่อหนังสือ</h3>
+      </div>
+
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <div class="inline-flex rounded-xl bg-slate-800 p-0.5 border border-slate-700">
+          <button id="btn-mode-flip" onclick="setInteractionMode('flip')" title="โหมดพลิกหน้ากระดาษ"
+            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white transition">
+            <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">พลิกหน้า</span>
+          </button>
+          <button id="btn-mode-pan" onclick="setInteractionMode('pan')" title="โหมดมือจับลากเลื่อนดูเอกสาร (คลิกซ้าย/ขวา/ปุ่มกลางค้างแล้วลาก)"
+            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition">
+            <i data-lucide="hand" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">ลากเลื่อน (Hand)</span>
+          </button>
+        </div>
+
+        <div class="w-px h-5 bg-slate-700 mx-0.5"></div>
+
+        <button onclick="changeZoom(-0.2)" title="ย่อขนาด" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
+          <i data-lucide="zoom-out" class="w-4 h-4"></i>
+        </button>
+        <span id="zoom-label" class="text-xs font-mono w-11 text-center text-slate-300">100%</span>
+        <button onclick="changeZoom(0.2)" title="ขยายขนาด" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
+          <i data-lucide="zoom-in" class="w-4 h-4"></i>
+        </button>
+        <button onclick="resetViewPosition()" title="รีเซ็ตขนาดและตำแหน่งกลางจอ" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
+          <i data-lucide="maximize-2" class="w-4 h-4"></i>
+        </button>
+
+        <div class="w-px h-5 bg-slate-700 mx-0.5"></div>
+
+        <button onclick="closeReader()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/90 hover:bg-rose-500 text-white text-xs sm:text-sm font-semibold transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">ปิดหนังสือ</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="flipbook-viewport" class="flex-1 relative overflow-hidden flex items-center justify-center select-none touch-none">
+      <div id="reader-loading" class="text-center text-white z-10">
         <div class="w-12 h-12 border-4 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin mx-auto mb-3"></div>
         <p id="reader-loading-text" class="text-sm text-emerald-200">กำลังจัดเตรียมหน้าหนังสือ E-Book...</p>
       </div>
       
-      <div id="zoom-wrapper" class="transition-transform duration-150 origin-center flex items-center justify-center">
+      <div id="pan-zoom-stage" class="origin-center will-change-transform flex items-center justify-center">
         <div id="flipbook-mount"></div>
+      </div>
+
+      <div id="pan-capture-overlay" class="hidden absolute inset-0 z-10 cursor-grab-custom"></div>
+
+      <div id="reader-hint-pill" class="hidden sm:flex items-center gap-2 absolute bottom-3 right-4 z-20 bg-slate-900/80 border border-slate-700/80 text-slate-300 text-[11px] px-3 py-1.5 rounded-full pointer-events-none">
+        <span>💡 ซูมขยายแล้วคลิกซ้าย/ขวา/ล้อเมาส์ค้างเพื่อลากเลื่อนหน้า A4 หรือหมุนล้อเมาส์เพื่อเลื่อนขึ้น-ลง</span>
       </div>
     </div>
 
-    <div class="bg-slate-900/90 border-t border-slate-800 px-4 py-2.5 flex items-center justify-center gap-4 text-white">
+    <div class="bg-slate-900/95 border-t border-slate-800 px-4 py-2.5 flex items-center justify-center gap-3 sm:gap-4 text-white z-20">
       <button onclick="flipPrev()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-emerald-600 text-xs sm:text-sm font-medium transition">
         <i data-lucide="chevron-left" class="w-4 h-4"></i> หน้าก่อนหน้า
       </button>
@@ -250,7 +331,7 @@
           </div>
           <div>
             <h2 class="text-lg font-bold text-emerald-950">ระบบจัดการหลังบ้าน (Admin Panel)</h2>
-            <p class="text-xs text-emerald-800">บันทึก/แก้ไข/ลบ ลง Google Sheets ทันทีแบบ Real-time</p>
+            <p class="text-xs text-emerald-800">จัดการรายวิชา หน่วยการเรียนรู้ สื่อการสอน และซิงค์ข้อมูลอัตโนมัติ</p>
           </div>
         </div>
         <button onclick="closeAdminModal()" class="p-2 rounded-xl bg-white/80 hover:bg-white text-slate-700 transition">
@@ -261,53 +342,71 @@
       <!-- Admin Navigation Tabs -->
       <div class="bg-emerald-50/70 px-6 pt-3 border-b border-emerald-100 flex gap-2 overflow-x-auto">
         <button onclick="switchAdminTab('books')" id="tab-btn-books" class="admin-tab px-4 py-2.5 rounded-t-xl text-sm font-semibold bg-white text-emerald-700 border-t border-x border-emerald-100">
-          📚 จัดการหนังสือ E-Book
+          📚 จัดการสื่อการสอน & หน่วยการเรียนรู้
         </button>
         <button onclick="switchAdminTab('subjects')" id="tab-btn-subjects" class="admin-tab px-4 py-2.5 rounded-t-xl text-sm font-semibold text-slate-600 hover:text-emerald-700">
           🏷️ จัดการรายวิชา
         </button>
         <button onclick="switchAdminTab('system')" id="tab-btn-system" class="admin-tab px-4 py-2.5 rounded-t-xl text-sm font-semibold text-slate-600 hover:text-emerald-700">
-          ⚙️ ติดตั้งฐานข้อมูล / พาท PDF / Backup & Restore
+          ⚙️ เชื่อมต่อทุกอุปกรณ์ / พาท PDF / Backup
         </button>
       </div>
 
       <div class="p-6">
-        <!-- TAB 1: MANAGE BOOKS -->
+        <!-- TAB 1: MANAGE BOOKS & UNITS -->
         <div id="admin-tab-books" class="space-y-6">
           <form id="book-form" onsubmit="handleSaveBook(event)" class="bg-emerald-50/40 p-5 rounded-2xl border border-emerald-100 space-y-4">
             <div class="flex items-center justify-between">
-              <h3 id="book-form-title" class="font-bold text-emerald-900 text-base">+ เพิ่มหนังสือ E-Book ใหม่</h3>
+              <h3 id="book-form-title" class="font-bold text-emerald-900 text-base">+ เพิ่มสื่อการสอน / E-Book ใหม่</h3>
               <button type="button" onclick="resetBookForm()" class="text-xs text-slate-500 hover:text-emerald-700 underline">ล้างฟอร์ม</button>
             </div>
             <input type="hidden" id="book-id">
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่อหนังสือ / ใบความรู้ *</label>
-                <input type="text" id="book-title" required placeholder="เช่น หน่วยที่ 1 แนวคิดเชิงคำนวณ"
-                  class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">1. รายวิชา *</label>
+                <select id="book-subject" onchange="updateUnitSuggestions()" required class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white"></select>
               </div>
               <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">รายวิชา *</label>
-                <select id="book-subject" required class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white"></select>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">2. หน่วยการเรียนรู้ / บทที่ * (พิมพ์ใหม่ หรือเลือกจากที่เคยสร้าง)</label>
+                <input type="text" id="book-unit" list="unit-datalist" required placeholder="เช่น หน่วยที่ 1 แนวคิดเชิงคำนวณ"
+                  class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white">
+                <datalist id="unit-datalist"></datalist>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">3. ประเภทสื่อการสอน *</label>
+                <select id="book-media-type" onchange="updateMediaFormUI()" class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white font-semibold text-emerald-900">
+                  <option value="ebook">📖 E-Book (หนังสือพลิกหน้า 3D)</option>
+                  <option value="video">🎬 คลิปวิดีโอการสอน (YouTube / Drive)</option>
+                  <option value="document">📄 เอกสาร / ใบความรู้ / สไลด์</option>
+                  <option value="link">🔗 ลิงก์ใบงาน / แบบทดสอบออนไลน์</option>
+                </select>
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">4. ชื่อสื่อ / หนังสือ / วิดีโอ *</label>
+                <input type="text" id="book-title" required placeholder="เช่น ใบความรู้ที่ 1.1 การแยกส่วนประกอบและการย่อยปัญหา"
+                  class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white">
               </div>
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1">คำอธิบายย่อ</label>
-              <input type="text" id="book-desc" placeholder="รายละเอียดเนื้อหา ระดับชั้น หรือสัปดาห์ที่เรียน"
+              <input type="text" id="book-desc" placeholder="รายละเอียดเนื้อหา จุดประสงค์การเรียนรู้ หรือคำชี้แจงให้นักเรียน"
                 class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white">
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">อัปโหลดไฟล์ PDF จากเครื่อง (สร้างปกให้อัตโนมัติ)</label>
+              <div id="field-upload-box">
+                <label id="label-upload-file" class="block text-xs font-semibold text-slate-700 mb-1">อัปโหลดไฟล์ PDF จากเครื่อง (สร้างปกให้อัตโนมัติ)</label>
                 <input type="file" id="book-file" accept="application/pdf" onchange="previewPdfCover(this)"
                   class="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200">
               </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">หรือ วางลิงก์ / File ID จาก Google Drive</label>
-                <input type="text" id="book-fileid" placeholder="วางลิงก์แชร์ Google Drive หรือ File ID"
+              <div id="field-url-box">
+                <label id="label-fileid-url" class="block text-xs font-semibold text-slate-700 mb-1">หรือ วางลิงก์ / File ID จาก Google Drive</label>
+                <input type="text" id="book-fileid" oninput="handleMediaUrlInput(this.value)" placeholder="วางลิงก์แชร์ Google Drive หรือ File ID"
                   class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white">
               </div>
             </div>
@@ -319,7 +418,7 @@
               </label>
 
               <button type="submit" id="btn-save-book" class="px-6 py-2.5 rounded-xl pastel-btn text-white font-semibold text-sm shadow-sm">
-                บันทึกหนังสือ E-Book
+                บันทึกสื่อการสอน
               </button>
             </div>
           </form>
@@ -328,10 +427,11 @@
             <table class="w-full text-left text-sm">
               <thead class="bg-emerald-50 text-emerald-900 font-semibold">
                 <tr>
-                  <th class="p-3">ชื่อเอกสาร</th>
-                  <th class="p-3">รายวิชา</th>
-                  <th class="p-3 text-center">ยอดอ่าน</th>
-                  <th class="p-3 text-center">สถานะ (คลิกสลับ)</th>
+                  <th class="p-3">ประเภท</th>
+                  <th class="p-3">ชื่อสื่อ / เอกสาร</th>
+                  <th class="p-3">รายวิชา & หน่วยการเรียนรู้</th>
+                  <th class="p-3 text-center">ยอดเข้าดู</th>
+                  <th class="p-3 text-center">สถานะ</th>
                   <th class="p-3 text-right">จัดการ</th>
                 </tr>
               </thead>
@@ -361,17 +461,16 @@
           <div id="admin-subjects-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
         </div>
 
-        <!-- TAB 3: SYSTEM SETTINGS, AUTO-INSTALL DB, DRIVE PATH, BACKUP & RESTORE -->
+        <!-- TAB 3: SYSTEM SETTINGS -->
         <div id="admin-tab-system" class="hidden space-y-6">
-          
           <div class="bg-emerald-50/40 p-5 rounded-2xl border border-emerald-100 space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <h3 class="font-bold text-emerald-950 text-base flex items-center gap-2">
                 <i data-lucide="database" class="w-5 h-5 text-emerald-600"></i>
-                1. ตั้งค่าการเชื่อมต่อ & ติดตั้งฐานข้อมูล Google Sheets อัตโนมัติ
+                1. ตั้งค่าการเชื่อมต่อฐานข้อมูลกลาง (ซิงค์ทุกอุปกรณ์อัตโนมัติ)
               </h3>
               <button type="button" onclick="autoInstallDatabaseNow()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm">
-                <i data-lucide="wand-2" class="w-3.5 h-3.5"></i> ติดตั้งฐานข้อมูลอัตโนมัติทันที
+                <i data-lucide="wand-2" class="w-3.5 h-3.5"></i> ติดตั้งฐานข้อมูลกลางอัตโนมัติ
               </button>
             </div>
             
@@ -383,8 +482,8 @@
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Google Sheet ID (เว้นว่างเพื่อให้ระบบสร้างให้อัตโนมัติ)</label>
-                <input type="text" id="cfg-sheet-id" placeholder="ระบบจะเติมให้อัตโนมัติเมื่อเชื่อมต่อสำเร็จ"
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Google Sheet ID (ฐานข้อมูลกลาง)</label>
+                <input type="text" id="cfg-sheet-id" placeholder="ระบบสร้างและจำค่าไว้บน Server อัตโนมัติ"
                   class="w-full px-3.5 py-2 rounded-xl border border-emerald-200 text-sm bg-white font-mono">
                 <div id="active-sheet-info" class="text-[11px] text-emerald-700 mt-1"></div>
               </div>
@@ -408,16 +507,20 @@
             </div>
 
             <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
-              <button type="button" onclick="copyStudentShareLink()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 text-xs sm:text-sm font-semibold">
-                <i data-lucide="share-2" class="w-4 h-4"></i> คัดลอกลิงก์พร้อมค่าตั้งค่า (สำหรับส่งให้นักเรียน)
-              </button>
+              <div class="flex flex-wrap gap-2">
+                <button type="button" onclick="copyStudentShareLink()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 text-xs font-semibold">
+                  <i data-lucide="smartphone" class="w-4 h-4"></i> คัดลอกลิงก์เปิดบนมือถือ / แท็บเล็ต
+                </button>
+                <button type="button" onclick="copyPermanentConfigCode()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-50 border border-sky-300 text-sky-800 hover:bg-sky-100 text-xs font-semibold">
+                  <i data-lucide="code" class="w-4 h-4"></i> คัดลอกโค้ดฝังถาวรใน index.html
+                </button>
+              </div>
               <button type="button" onclick="saveSystemConfig()" class="px-6 py-2.5 rounded-xl pastel-btn text-white font-semibold text-sm">
-                บันทึกการตั้งค่าทั้งหมด
+                บันทึกการตั้งค่าลง Server
               </button>
             </div>
           </div>
 
-          <!-- Backup, Restore & Delete Database -->
           <div class="bg-amber-50/50 p-5 rounded-2xl border border-amber-200/80 space-y-4">
             <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
               <i data-lucide="hard-drive-download" class="w-5 h-5 text-amber-600"></i>
@@ -428,7 +531,7 @@
               <div class="bg-white p-4 rounded-2xl border border-emerald-100 flex flex-col justify-between">
                 <div>
                   <h4 class="font-bold text-sm text-emerald-900">สำรองฐานข้อมูล (Backup)</h4>
-                  <p class="text-xs text-slate-500 mt-1">ดาวน์โหลดข้อมูลรายวิชา รายการหนังสือ สถิติยอดอ่าน และการตั้งค่าเป็นไฟล์ .JSON</p>
+                  <p class="text-xs text-slate-500 mt-1">ดาวน์โหลดข้อมูลรายวิชา หน่วยการเรียนรู้ สื่อทั้งหมด และการตั้งค่าเป็นไฟล์ .JSON</p>
                 </div>
                 <button onclick="handleBackup()" class="mt-4 w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5">
                   <i data-lucide="download" class="w-4 h-4"></i> ดาวน์โหลดไฟล์ Backup
@@ -449,11 +552,11 @@
               <div class="bg-white p-4 rounded-2xl border border-rose-200 flex flex-col justify-between">
                 <div>
                   <h4 class="font-bold text-sm text-rose-700">ล้างฐานข้อมูล (Delete)</h4>
-                  <p class="text-xs text-slate-500 mt-1">ลบข้อมูลหนังสือหรือล้างฐานข้อมูลเริ่มต้นใหม่ (ต้องยืนยันรหัส PIN)</p>
+                  <p class="text-xs text-slate-500 mt-1">ลบข้อมูลสื่อการสอนหรือล้างฐานข้อมูลเริ่มต้นใหม่ (ต้องยืนยันรหัส PIN)</p>
                 </div>
                 <div class="mt-4 flex gap-2">
                   <button onclick="handleResetDatabase('books')" class="flex-1 py-2 px-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs font-semibold">
-                    ลบหนังสือทั้งหมด
+                    ลบสื่อทั้งหมด
                   </button>
                   <button onclick="handleResetDatabase('all')" class="flex-1 py-2 px-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold">
                     ล้างทั้งหมด
@@ -462,7 +565,6 @@
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -470,12 +572,12 @@
 
   <!-- ==================== NOTIFICATION MODAL ==================== -->
   <div id="msg-modal" class="fixed inset-0 z-[60] hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-emerald-100 text-center">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-emerald-100 text-center">
       <div id="msg-icon" class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
         <i data-lucide="info" class="w-6 h-6"></i>
       </div>
       <h4 id="msg-title" class="text-base font-bold text-slate-800">แจ้งเตือน</h4>
-      <p id="msg-body" class="text-xs text-slate-600 mt-1.5 mb-5 whitespace-pre-line"></p>
+      <p id="msg-body" class="text-xs text-slate-600 mt-1.5 mb-5 whitespace-pre-line text-left bg-slate-50 p-3 rounded-xl border border-slate-100 font-mono overflow-x-auto"></p>
       <button onclick="closeMsgModal()" class="w-full py-2.5 rounded-xl pastel-btn text-white font-semibold text-sm">ตกลง</button>
     </div>
   </div>
@@ -500,8 +602,10 @@
         {
           id: "DEMO-1",
           subjectId: "SUB-01",
-          title: "ใบความรู้ที่ 1 แนวคิดเชิงคำนวณ (ทดลองเปิดอ่าน E-Book)",
-          description: "คลิกเพื่อทดสอบการเปิดอ่านแบบพลิกหน้ากระดาษ 3D รองรับทัชสกรีน เมาส์ และคีย์บอร์ด",
+          unit: "หน่วยที่ 1 แนวคิดเชิงคำนวณ",
+          mediaType: "ebook",
+          title: "หนังสือเรียน E-Book: แนวคิดเชิงคำนวณและการแก้ปัญหา",
+          description: "ทดลองกดซูม (+) แล้วคลิกเมาส์ซ้าย/ขวา/ปุ่มกลางค้างเพื่อลากเลื่อนดูเนื้อหาในหน้า A4",
           fileId: "DEMO",
           cover: "",
           views: 128,
@@ -509,22 +613,38 @@
         },
         {
           id: "DEMO-2",
-          subjectId: "SUB-02",
-          title: "คู่มือการเขียนโปรแกรม Python เบื้องต้น",
-          description: "โครงสร้างควบคุม เงื่อนไข และวนซ้ำ ระดับชั้นมัธยมศึกษาปีที่ 4",
-          fileId: "DEMO",
+          subjectId: "SUB-01",
+          unit: "หน่วยที่ 1 แนวคิดเชิงคำนวณ",
+          mediaType: "link",
+          title: "แบบฝึกหัดท้ายหน่วยที่ 1 (Google Forms)",
+          description: "ทำแบบทดสอบเก็บคะแนนหลังศึกษา E-Book หน่วยที่ 1 จบแล้ว",
+          fileId: "https://forms.google.com",
           cover: "",
           views: 94,
           visible: true
         },
         {
           id: "DEMO-3",
+          subjectId: "SUB-01",
+          unit: "หน่วยที่ 2 การเขียนโปรแกรมเบื้องต้น",
+          mediaType: "video",
+          title: "คลิปวิดีโอสอน: พื้นฐานการเขียนโปรแกรม Python",
+          description: "วิดีโอสาธิตการเขียนคำสั่งรับค่าและแสดงผล สามารถดูในหน้าเว็บได้ทันที",
+          fileId: "https://www.youtube.com/watch?v=kqtD5dpn9C8",
+          cover: "https://img.youtube.com/vi/kqtD5dpn9C8/hqdefault.jpg",
+          views: 85,
+          visible: true
+        },
+        {
+          id: "DEMO-4",
           subjectId: "SUB-03",
-          title: "การเชื่อมต่อ ESP32 & เซ็นเซอร์อัจฉริยะ",
-          description: "เอกสารประกอบการเรียนห้องปฏิบัติการคอมพิวเตอร์ 1204",
-          fileId: "DEMO",
+          unit: "หน่วยที่ 1 พื้นฐานไมโครคอนโทรลเลอร์ Arduino",
+          mediaType: "link",
+          title: "ห้องปฏิบัติการจำลองวงจรออนไลน์ (Tinkercad Circuits)",
+          description: "ลิงก์สำหรับต่อวงจร LED และเซ็นเซอร์จำลองก่อนลงมือต่อบอร์ดจริง",
+          fileId: "https://www.tinkercad.com",
           cover: "",
-          views: 156,
+          views: 64,
           visible: true
         }
       ],
@@ -535,15 +655,30 @@
       }
     };
 
+    const MEDIA_META = {
+      ebook:    { label: "📖 E-Book", badgeClass: "bg-emerald-100 text-emerald-800 border-emerald-200", icon: "book-open", actionText: "เปิดอ่าน E-Book" },
+      video:    { label: "🎬 วิดีโอ", badgeClass: "bg-rose-100 text-rose-800 border-rose-200", icon: "play-circle", actionText: "รับชมวิดีโอ" },
+      document: { label: "📄 เอกสาร/ใบความรู้", badgeClass: "bg-sky-100 text-sky-800 border-sky-200", icon: "file-text", actionText: "เปิดดูเอกสาร" },
+      link:     { label: "🔗 ใบงาน/ลิงก์", badgeClass: "bg-amber-100 text-amber-800 border-amber-200", icon: "external-link", actionText: "เปิดลิงก์งาน" }
+    };
+
     let state = {
       config: loadLocalConfig(),
       subjects: [],
       books: [],
       settings: {},
       selectedSubject: "ALL",
+      selectedUnit: "ALL",
+      selectedMediaType: "ALL",
       pendingCoverBase64: "",
       pageFlip: null,
       zoom: 1,
+      panX: 0,
+      panY: 0,
+      interactionMode: "flip",
+      isDragging: false,
+      dragStartX: 0,
+      dragStartY: 0,
       activeSheetId: "",
       activeSheetUrl: "",
       activeFolderId: "",
@@ -554,15 +689,15 @@
       const el = document.getElementById("realtime-sync-status");
       if (!el) return;
       if (mode === "syncing") {
-        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span> ${text || "กำลังบันทึกลง Google Sheets..."}`;
+        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span> ${text || "กำลังซิงค์กับ Google Sheets..."}`;
         el.className = "inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300";
       } else if (mode === "error") {
-        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span> ${text || "ซิงค์ข้อมูลขัดข้อง"}`;
+        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span> ${text || "ยังไม่เชื่อมต่อชีต"}`;
         el.className = "inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300";
       } else {
         const timeStr = new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> ซิงค์ล่าสุด ${timeStr}`;
-        el.className = "inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/85 text-emerald-800 border border-emerald-200";
+        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Real-time (${timeStr})`;
+        el.className = "inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/85 hover:bg-white text-emerald-800 border border-emerald-200";
       }
     }
 
@@ -607,8 +742,8 @@
       state.activeFolderId = data.activeFolderId || "";
       state.activeFolderName = data.activeFolderName || "";
 
-      if (!state.config.sheetId && state.activeSheetId) state.config.sheetId = state.activeSheetId;
-      if (!state.config.folderId && state.activeFolderId) state.config.folderId = state.activeFolderId;
+      if (state.activeSheetId) state.config.sheetId = state.activeSheetId;
+      if (state.activeFolderId) state.config.folderId = state.activeFolderId;
       localStorage.setItem("ebook_sys_config", JSON.stringify(state.config));
     }
 
@@ -631,11 +766,13 @@
       const saved = JSON.parse(localStorage.getItem("ebook_sys_config") || "{}");
       
       const merged = {
-        scriptUrl: params.get("api") || saved.scriptUrl || DEFAULT_CONFIG.scriptUrl,
-        sheetId: params.get("sid") || saved.sheetId || DEFAULT_CONFIG.sheetId,
-        folderId: params.get("fid") || saved.folderId || DEFAULT_CONFIG.folderId
+        scriptUrl: params.get("api") || DEFAULT_CONFIG.scriptUrl || saved.scriptUrl || "",
+        sheetId: params.get("sid") || DEFAULT_CONFIG.sheetId || saved.sheetId || "",
+        folderId: params.get("fid") || DEFAULT_CONFIG.folderId || saved.folderId || ""
       };
-      localStorage.setItem("ebook_sys_config", JSON.stringify(merged));
+      if (merged.scriptUrl) {
+        localStorage.setItem("ebook_sys_config", JSON.stringify(merged));
+      }
       return merged;
     }
 
@@ -645,30 +782,44 @@
       return match ? match[0] : input.trim();
     }
 
+    function openQuickConnect() {
+      const url = prompt("วาง Google Apps Script Web App URL (ลงท้ายด้วย /exec):");
+      if (!url || !url.trim().startsWith("http")) return;
+      state.config.scriptUrl = url.trim();
+      localStorage.setItem("ebook_sys_config", JSON.stringify(state.config));
+      document.getElementById("setup-alert-banner").classList.add("hidden");
+      fetchLibraryData(false);
+    }
+
     window.addEventListener("DOMContentLoaded", () => {
       lucide.createIcons();
+      initPanAndZoomEvents();
       fetchLibraryData();
       setInterval(() => {
         if (state.config.scriptUrl && document.hidden === false) {
           fetchLibraryData(true);
         }
-      }, 30000);
+      }, 10000);
     });
 
     async function fetchLibraryData(silent = false) {
-      const badge = document.getElementById("connection-badge");
+      const banner = document.getElementById("setup-alert-banner");
       if (!state.config.scriptUrl) {
         state.subjects = DEMO_DATA.subjects;
         state.books = DEMO_DATA.books;
         state.settings = DEMO_DATA.settings;
-        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span> โหมดพรีวิวสาธิต (รหัส PIN: 123456)`;
+        banner.classList.remove("hidden");
+        setSyncStatus("error", "โหมดสาธิต (ยังไม่เชื่อมชีต)");
         renderAll();
         return;
       }
 
+      banner.classList.add("hidden");
       if (!silent) {
         document.getElementById("loading-state").classList.remove("hidden");
         document.getElementById("books-grid").innerHTML = "";
+      } else {
+        setSyncStatus("syncing", "กำลังซิงค์...");
       }
 
       try {
@@ -682,12 +833,15 @@
         const data = await res.json();
         if (data.status === "success") {
           applyServerData(data);
-          badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> เชื่อมต่อ Google Sheets แล้ว`;
           setSyncStatus("done");
+          if (!document.getElementById("admin-modal").classList.contains("hidden")) {
+            populateAdminData();
+          }
         } else {
           throw new Error(data.message);
         }
       } catch (err) {
+        setSyncStatus("error", "ซิงค์ขัดข้อง");
         if (!silent) {
           showMessage("การเชื่อมต่อขัดข้อง", "ไม่สามารถเชื่อมต่อฐานข้อมูลได้: " + err.message, true);
           state.subjects = DEMO_DATA.subjects;
@@ -707,6 +861,7 @@
       }
 
       try {
+        setSyncStatus("syncing", "กำลังสร้างฐานข้อมูลกลาง...");
         const url = new URL(scriptUrl);
         url.searchParams.set("action", "initAuto");
         const res = await fetch(url.toString());
@@ -720,7 +875,7 @@
 
         await fetchLibraryData();
         populateAdminData();
-        showMessage("ติดตั้งฐานข้อมูลอัตโนมัติสำเร็จ!", `สร้างไฟล์ Google Sheets และโฟลเดอร์เก็บ PDF เรียบร้อยแล้ว\nSheet ID: ${data.sheetId}`);
+        showMessage("ติดตั้งฐานข้อมูลกลางสำเร็จ!", `สร้างไฟล์ Google Sheets และโฟลเดอร์เก็บ PDF เรียบร้อยแล้ว\nSheet ID: ${data.sheetId}`);
       } catch (err) {
         showMessage("ติดตั้งไม่สำเร็จ", err.message, true);
       }
@@ -728,9 +883,11 @@
 
     function renderAll() {
       if (state.settings.SchoolName) {
-        document.getElementById("ui-school-title").textContent = "คลังหนังสือเรียน E-Book • " + state.settings.SchoolName;
+        document.getElementById("ui-school-title").textContent = "คลังสื่อการสอน & E-Book • " + state.settings.SchoolName;
       }
       renderSubjectTabs();
+      renderUnitTabs();
+      renderMediaTypeTabs();
       renderBooks();
       lucide.createIcons();
     }
@@ -741,7 +898,7 @@
         <button onclick="selectSubject('ALL')" class="px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold whitespace-nowrap transition ${
           state.selectedSubject === 'ALL' ? 'pastel-btn text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-emerald-50 border border-emerald-100'
         }">
-          ทั้งหมด (${state.books.filter(b => b.visible).length})
+          ทุกรายวิชา (${state.books.filter(b => b.visible).length})
         </button>
       `;
 
@@ -760,9 +917,94 @@
       container.innerHTML = html;
     }
 
+    function renderUnitTabs() {
+      const wrapper = document.getElementById("unit-tabs-wrapper");
+      const container = document.getElementById("unit-tabs");
+
+      const relevantBooks = state.books.filter(b => {
+        if (!b.visible) return false;
+        if (state.selectedSubject !== "ALL" && b.subjectId !== state.selectedSubject) return false;
+        return true;
+      });
+
+      const unitsSet = new Set();
+      relevantBooks.forEach(b => {
+        if (b.unit) unitsSet.add(b.unit);
+      });
+      const units = Array.from(unitsSet).sort((a, b) => a.localeCompare(b, "th", { numeric: true }));
+
+      if (units.length === 0) {
+        wrapper.classList.add("hidden");
+        return;
+      }
+
+      wrapper.classList.remove("hidden");
+      if (state.selectedUnit !== "ALL" && !units.includes(state.selectedUnit)) {
+        state.selectedUnit = "ALL";
+      }
+
+      let html = `
+        <button onclick="selectUnit('ALL')" class="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+          state.selectedUnit === 'ALL' ? 'bg-amber-400 text-emerald-950 shadow-2xs' : 'bg-white text-slate-600 hover:bg-amber-50 border border-amber-200/70'
+        }">
+          ทุกหน่วย (${relevantBooks.length})
+        </button>
+      `;
+
+      units.forEach(u => {
+        const count = relevantBooks.filter(b => (b.unit || "หน่วยการเรียนรู้ทั่วไป") === u).length;
+        const active = state.selectedUnit === u;
+        html += `
+          <button onclick="selectUnit('${u.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+            active ? 'bg-amber-400 text-emerald-950 shadow-2xs' : 'bg-white text-slate-700 hover:bg-amber-50 border border-amber-200/70'
+          }">
+            ${u} (${count})
+          </button>
+        `;
+      });
+
+      container.innerHTML = html;
+      lucide.createIcons();
+    }
+
+    function selectUnit(unitName) {
+      state.selectedUnit = unitName;
+      renderUnitTabs();
+      renderBooks();
+    }
+
+    function renderMediaTypeTabs() {
+      const container = document.getElementById("media-type-tabs");
+      const types = [
+        { id: "ALL", label: "ทุกประเภทสื่อ" },
+        { id: "ebook", label: "📖 E-Book" },
+        { id: "video", label: "🎬 คลิปวิดีโอ" },
+        { id: "document", label: "📄 เอกสาร / ใบความรู้" },
+        { id: "link", label: "🔗 ลิงก์ใบงาน / แบบทดสอบ" }
+      ];
+      container.innerHTML = types.map(t => {
+        const active = state.selectedMediaType === t.id;
+        return `
+          <button onclick="selectMediaType('${t.id}')" class="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+            active ? 'bg-emerald-800 text-white shadow-2xs' : 'bg-emerald-50/80 text-emerald-900 hover:bg-emerald-100'
+          }">
+            ${t.label}
+          </button>
+        `;
+      }).join("");
+    }
+
+    function selectMediaType(typeId) {
+      state.selectedMediaType = typeId;
+      renderMediaTypeTabs();
+      renderBooks();
+    }
+
     function selectSubject(id) {
       state.selectedSubject = id;
+      state.selectedUnit = "ALL";
       renderSubjectTabs();
+      renderUnitTabs();
       renderBooks();
     }
 
@@ -774,7 +1016,11 @@
       const filtered = state.books.filter(b => {
         if (!b.visible) return false;
         if (state.selectedSubject !== "ALL" && b.subjectId !== state.selectedSubject) return false;
-        if (keyword && !b.title.toLowerCase().includes(keyword) && !(b.description || "").toLowerCase().includes(keyword)) return false;
+        const unitName = b.unit || "หน่วยการเรียนรู้ทั่วไป";
+        if (state.selectedUnit !== "ALL" && unitName !== state.selectedUnit) return false;
+        const mType = b.mediaType || "ebook";
+        if (state.selectedMediaType !== "ALL" && mType !== state.selectedMediaType) return false;
+        if (keyword && !b.title.toLowerCase().includes(keyword) && !(b.description || "").toLowerCase().includes(keyword) && !unitName.toLowerCase().includes(keyword)) return false;
         return true;
       });
 
@@ -785,44 +1031,286 @@
       }
 
       empty.classList.add("hidden");
-      grid.innerHTML = filtered.map(book => {
-        const sub = state.subjects.find(s => s.id === book.subjectId) || { name: "ทั่วไป", color: "#10b981" };
-        const coverHtml = book.cover
-          ? `<img src="${book.cover}" class="w-full h-full object-cover">`
-          : `<div class="w-full h-full bg-gradient-to-br from-emerald-100 via-lime-100 to-amber-100 flex flex-col items-center justify-center p-5 text-center">
-               <i data-lucide="book-open" class="w-12 h-12 text-emerald-600 mb-2"></i>
-               <span class="text-xs font-bold text-emerald-900 line-clamp-3">${book.title}</span>
-             </div>`;
+
+      const groupedByUnit = {};
+      filtered.forEach(b => {
+        const u = b.unit || "หน่วยการเรียนรู้ทั่วไป";
+        if (!groupedByUnit[u]) groupedByUnit[u] = [];
+        groupedByUnit[u].push(b);
+      });
+
+      const sortedUnits = Object.keys(groupedByUnit).sort((a, b) => a.localeCompare(b, "th", { numeric: true }));
+
+      grid.innerHTML = sortedUnits.map(unitTitle => {
+        const unitBooks = groupedByUnit[unitTitle];
+        const cardsHtml = unitBooks.map(book => {
+          const sub = state.subjects.find(s => s.id === book.subjectId) || { name: "ทั่วไป", color: "#10b981" };
+          const mType = book.mediaType || "ebook";
+          const meta = MEDIA_META[mType] || MEDIA_META.ebook;
+
+          const coverHtml = book.cover
+            ? `<img src="${book.cover}" class="w-full h-full object-cover">`
+            : `<div class="w-full h-full bg-gradient-to-br from-emerald-100 via-lime-100 to-amber-100 flex flex-col items-center justify-center p-5 text-center">
+                 <i data-lucide="${meta.icon}" class="w-12 h-12 text-emerald-600 mb-2"></i>
+                 <span class="text-xs font-bold text-emerald-900 line-clamp-3">${book.title}</span>
+               </div>`;
+
+          return `
+            <div onclick="openMediaItem('${book.id}')" class="book-card glass-card rounded-3xl overflow-hidden cursor-pointer flex flex-col">
+              <div class="aspect-[3/4] relative overflow-hidden border-b border-emerald-100">
+                ${coverHtml}
+                <span class="absolute top-3 left-3 text-[11px] font-semibold px-2.5 py-1 rounded-xl text-white shadow-sm max-w-[65%] truncate" style="background:${sub.color}">
+                  ${sub.name}
+                </span>
+                <span class="absolute bottom-2.5 right-2.5 text-[11px] font-semibold px-2.5 py-1 rounded-xl border shadow-xs backdrop-blur-md ${meta.badgeClass}">
+                  ${meta.label}
+                </span>
+              </div>
+              <div class="p-4 flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 class="font-bold text-slate-800 text-sm sm:text-base line-clamp-2 leading-snug">${book.title}</h3>
+                  <p class="text-xs text-slate-500 mt-1 line-clamp-2">${book.description || "คลิกเพื่อเปิดดูสื่อการสอน"}</p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-emerald-100/80 flex items-center justify-between text-xs">
+                  <span class="text-slate-500 flex items-center gap-1">
+                    <i data-lucide="eye" class="w-3.5 h-3.5 text-emerald-600"></i> ${book.views || 0} ครั้ง
+                  </span>
+                  <span class="font-semibold text-emerald-700 flex items-center gap-1">
+                    ${meta.actionText} <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("");
 
         return `
-          <div onclick="openBookReader('${book.id}')" class="book-card glass-card rounded-3xl overflow-hidden cursor-pointer flex flex-col">
-            <div class="aspect-[3/4] relative overflow-hidden border-b border-emerald-100">
-              ${coverHtml}
-              <span class="absolute top-3 left-3 text-[11px] font-semibold px-2.5 py-1 rounded-xl text-white shadow-sm" style="background:${sub.color}">
-                ${sub.name}
-              </span>
-            </div>
-            <div class="p-4 flex-1 flex flex-col justify-between">
-              <div>
-                <h3 class="font-bold text-slate-800 text-sm sm:text-base line-clamp-2 leading-snug">${book.title}</h3>
-                <p class="text-xs text-slate-500 mt-1 line-clamp-2">${book.description || "คลิกเพื่อเปิดอ่าน E-Book"}</p>
-              </div>
-              <div class="mt-4 pt-3 border-t border-emerald-100/80 flex items-center justify-between text-xs">
-                <span class="text-slate-500 flex items-center gap-1">
-                  <i data-lucide="eye" class="w-3.5 h-3.5 text-emerald-600"></i> ${book.views || 0} ครั้ง
+          <section class="space-y-4">
+            <div class="flex items-center justify-between bg-white/80 backdrop-blur-xs px-4 py-3 rounded-2xl border border-emerald-200/80 shadow-2xs">
+              <div class="flex items-center gap-2.5">
+                <span class="w-8 h-8 rounded-xl pastel-header flex items-center justify-center text-emerald-900 shadow-2xs">
+                  <i data-lucide="folder-open" class="w-4 h-4"></i>
                 </span>
-                <span class="font-semibold text-emerald-700 flex items-center gap-1">
-                  เปิดอ่าน <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-                </span>
+                <div>
+                  <h3 class="text-sm sm:text-base font-bold text-emerald-950">${unitTitle}</h3>
+                  <p class="text-[11px] text-slate-500">สื่อการสอนในหน่วยนี้ทั้งหมด ${unitBooks.length} รายการ</p>
+                </div>
               </div>
             </div>
-          </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              ${cardsHtml}
+            </div>
+          </section>
         `;
       }).join("");
+
       lucide.createIcons();
     }
 
-    // ==================== 3D FLIPBOOK READER ====================
+    // ==================== MULTIMEDIA DISPATCHER ====================
+    function extractYouTubeId(url) {
+      if (!url) return "";
+      const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/))([a-zA-Z0-9_-]{11})/);
+      return match ? match[1] : "";
+    }
+
+    function openMediaItem(itemId) {
+      const item = state.books.find(b => b.id === itemId);
+      if (!item) return;
+      const mType = item.mediaType || "ebook";
+
+      if (mType === "ebook") {
+        openBookReader(itemId);
+        return;
+      }
+
+      item.views = (item.views || 0) + 1;
+      renderBooks();
+      if (state.config.scriptUrl && !item.id.startsWith("DEMO-")) {
+        fetch(state.config.scriptUrl, {
+          method: "POST",
+          body: JSON.stringify({ action: "incrementView", id: item.id, sheetId: state.config.sheetId })
+        }).catch(() => {});
+      }
+
+      const meta = MEDIA_META[mType] || MEDIA_META.document;
+      const targetUrl = (item.fileId || "").trim();
+
+      if (mType === "link") {
+        const finalUrl = targetUrl.startsWith("http") ? targetUrl : "https://" + targetUrl;
+        window.open(finalUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      document.getElementById("mv-title").textContent = item.title;
+      document.getElementById("mv-type-badge").textContent = meta.label;
+      const container = document.getElementById("mv-container");
+      const extBtn = document.getElementById("mv-external-link");
+
+      if (mType === "video") {
+        const ytId = extractYouTubeId(targetUrl);
+        if (ytId) {
+          extBtn.href = `https://www.youtube.com/watch?v=${ytId}`;
+          container.innerHTML = `<iframe class="w-full h-full aspect-video" src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        } else {
+          const driveId = extractDriveId(targetUrl);
+          const previewUrl = targetUrl.startsWith("http")
+            ? targetUrl.replace(/\/view.*$/, "/preview")
+            : `https://drive.google.com/file/d/${driveId}/preview`;
+          extBtn.href = previewUrl;
+          container.innerHTML = `<iframe class="w-full h-full" src="${previewUrl}" allow="autoplay" allowfullscreen></iframe>`;
+        }
+      } else if (mType === "document") {
+        let docPreviewUrl = targetUrl;
+        if (!targetUrl.startsWith("http")) {
+          docPreviewUrl = `https://drive.google.com/file/d/${targetUrl}/preview`;
+        } else if (targetUrl.includes("drive.google.com")) {
+          const dId = extractDriveId(targetUrl);
+          docPreviewUrl = `https://drive.google.com/file/d/${dId}/preview`;
+        } else if (targetUrl.includes("docs.google.com")) {
+          docPreviewUrl = targetUrl.replace(/\/edit.*$/, "/preview");
+        }
+        extBtn.href = docPreviewUrl;
+        container.innerHTML = `<iframe class="w-full h-full bg-white" src="${docPreviewUrl}"></iframe>`;
+      }
+
+      document.getElementById("media-viewer-modal").classList.remove("hidden");
+      lucide.createIcons();
+    }
+
+    function closeMediaViewer() {
+      document.getElementById("mv-container").innerHTML = "";
+      document.getElementById("media-viewer-modal").classList.add("hidden");
+    }
+
+    // ==================== 3D FLIPBOOK READER + ALL-BUTTON PAN & ZOOM ====================
+    function initPanAndZoomEvents() {
+      const viewport = document.getElementById("flipbook-viewport");
+      const overlay = document.getElementById("pan-capture-overlay");
+
+      viewport.addEventListener("contextmenu", (e) => e.preventDefault());
+
+      const startDrag = (clientX, clientY) => {
+        state.isDragging = true;
+        state.dragStartX = clientX - state.panX;
+        state.dragStartY = clientY - state.panY;
+        overlay.classList.add("cursor-grabbing-custom");
+      };
+
+      const moveDrag = (clientX, clientY) => {
+        if (!state.isDragging) return;
+        state.panX = clientX - state.dragStartX;
+        state.panY = clientY - state.dragStartY;
+        applyTransform();
+      };
+
+      const endDrag = () => {
+        state.isDragging = false;
+        overlay.classList.remove("cursor-grabbing-custom");
+      };
+
+      overlay.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        startDrag(e.clientX, e.clientY);
+      });
+
+      viewport.addEventListener("mousedown", (e) => {
+        if (e.button === 1 || e.button === 2) {
+          e.preventDefault();
+          overlay.classList.remove("hidden");
+          startDrag(e.clientX, e.clientY);
+        }
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (state.isDragging) {
+          e.preventDefault();
+          moveDrag(e.clientX, e.clientY);
+        }
+      });
+
+      window.addEventListener("mouseup", () => {
+        if (state.isDragging) {
+          endDrag();
+          updateOverlayVisibility();
+        }
+      });
+
+      overlay.addEventListener("touchstart", (e) => {
+        if (e.touches.length === 1) startDrag(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: false });
+
+      overlay.addEventListener("touchmove", (e) => {
+        if (state.isDragging && e.touches.length === 1) {
+          e.preventDefault();
+          moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: false });
+
+      overlay.addEventListener("touchend", () => endDrag());
+
+      viewport.addEventListener("wheel", (e) => {
+        if (document.getElementById("reader-modal").classList.contains("hidden")) return;
+        e.preventDefault();
+        if (e.ctrlKey || e.metaKey) {
+          changeZoom(e.deltaY < 0 ? 0.15 : -0.15);
+        } else {
+          state.panY -= e.deltaY * 0.85;
+          state.panX -= e.deltaX * 0.85;
+          applyTransform();
+        }
+      }, { passive: false });
+    }
+
+    function setInteractionMode(mode) {
+      state.interactionMode = mode;
+      const btnFlip = document.getElementById("btn-mode-flip");
+      const btnPan = document.getElementById("btn-mode-pan");
+
+      if (mode === "pan") {
+        btnPan.className = "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 text-slate-950 transition";
+        btnFlip.className = "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition";
+      } else {
+        btnFlip.className = "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white transition";
+        btnPan.className = "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition";
+      }
+      updateOverlayVisibility();
+    }
+
+    function updateOverlayVisibility() {
+      const overlay = document.getElementById("pan-capture-overlay");
+      if (state.interactionMode === "pan" || state.zoom > 1.01) {
+        overlay.classList.remove("hidden");
+      } else {
+        overlay.classList.add("hidden");
+      }
+    }
+
+    function applyTransform() {
+      const stage = document.getElementById("pan-zoom-stage");
+      stage.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+    }
+
+    function changeZoom(delta) {
+      const prevZoom = state.zoom;
+      state.zoom = Math.min(3.0, Math.max(0.6, Number((state.zoom + delta).toFixed(2))));
+      if (prevZoom <= 1 && state.zoom > 1 && state.panY === 0) state.panY = 90;
+      if (state.zoom <= 1) { state.panX = 0; state.panY = 0; }
+
+      document.getElementById("zoom-label").textContent = Math.round(state.zoom * 100) + "%";
+      applyTransform();
+      updateOverlayVisibility();
+    }
+
+    function resetViewPosition() {
+      state.zoom = 1;
+      state.panX = 0;
+      state.panY = 0;
+      document.getElementById("zoom-label").textContent = "100%";
+      setInteractionMode("flip");
+      applyTransform();
+    }
+
     async function openBookReader(bookId) {
       const book = state.books.find(b => b.id === bookId);
       if (!book) return;
@@ -832,7 +1320,7 @@
       document.getElementById("reader-subject-badge").textContent = sub ? sub.name : "E-Book";
       document.getElementById("reader-modal").classList.remove("hidden");
       document.getElementById("reader-loading").classList.remove("hidden");
-      resetZoom();
+      resetViewPosition();
 
       book.views = (book.views || 0) + 1;
       renderBooks();
@@ -887,7 +1375,7 @@
       for (let i = 1; i <= totalPages; i++) {
         document.getElementById("reader-loading-text").textContent = `กำลังสร้างหน้าหนังสือ ${i} / ${totalPages}...`;
         const page = await pdf.getPage(i);
-        const viewport = page.getViewport({ scale: 1.8 });
+        const viewport = page.getViewport({ scale: 2.0 });
         const canvas = document.createElement("canvas");
         canvas.width = viewport.width;
         canvas.height = viewport.height;
@@ -926,27 +1414,14 @@
 
     function flipPrev() { if (state.pageFlip) state.pageFlip.flipPrev(); }
     function flipNext() { if (state.pageFlip) state.pageFlip.flipNext(); }
-
-    function changeZoom(delta) {
-      state.zoom = Math.min(2.2, Math.max(0.7, state.zoom + delta));
-      document.getElementById("zoom-wrapper").style.transform = `scale(${state.zoom})`;
-      document.getElementById("zoom-label").textContent = Math.round(state.zoom * 100) + "%";
-    }
-
-    function resetZoom() {
-      state.zoom = 1;
-      document.getElementById("zoom-wrapper").style.transform = "scale(1)";
-      document.getElementById("zoom-label").textContent = "100%";
-    }
-
-    function closeReader() {
-      document.getElementById("reader-modal").classList.add("hidden");
-    }
+    function closeReader() { document.getElementById("reader-modal").classList.add("hidden"); }
 
     window.addEventListener("keydown", (e) => {
       if (document.getElementById("reader-modal").classList.contains("hidden")) return;
       if (e.key === "ArrowLeft") flipPrev();
       if (e.key === "ArrowRight") flipNext();
+      if (e.key === "ArrowUp") { e.preventDefault(); state.panY += 50; applyTransform(); }
+      if (e.key === "ArrowDown") { e.preventDefault(); state.panY -= 50; applyTransform(); }
       if (e.key === "Escape") closeReader();
     });
 
@@ -961,15 +1436,17 @@
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 595, 842);
         ctx.fillStyle = "#065f46";
-        ctx.font = "bold 28px Prompt, sans-serif";
-        ctx.fillText(n === 1 ? "E-Book ตัวอย่างการสอน" : `เนื้อหาบทเรียน หน้าที่ ${n}`, 50, 120);
-        ctx.font = "20px Prompt, sans-serif";
+        ctx.font = "bold 26px Prompt, sans-serif";
+        ctx.fillText(n === 1 ? "E-Book ขนาด A4 (ทดลองซูม & ลาก)" : `เนื้อหาบทเรียน หน้าที่ ${n}`, 45, 110);
+        ctx.font = "19px Prompt, sans-serif";
         ctx.fillStyle = "#334155";
-        ctx.fillText("• ใช้นิ้วปัดซ้าย-ขวาบนมือถือเพื่อพลิกหน้า", 50, 210);
-        ctx.fillText("• ใช้เมาส์คลิกมุมกระดาษ หรือกดปุ่มลูกศรคีย์บอร์ด", 50, 260);
-        ctx.fillText("• บันทึก/แก้ไข/ลบ ลง Google Sheets แบบ Real-time", 50, 310);
-        ctx.fillText("• รองรับ PWA ติดตั้งบนมือถือ (Fix1204)", 50, 360);
-        return c.toDataURL("image/jpeg", 0.85);
+        ctx.fillText("1. กดปุ่มซูม (+) ด้านบนเพื่อขยายตัวอักษรให้ใหญ่ขึ้น", 45, 190);
+        ctx.fillText("2. คลิกเมาส์ซ้าย ขวา หรือล้อเมาส์ค้าง แล้วลากขึ้น-ลงได้ทันที", 45, 240);
+        ctx.fillText("3. หมุนล้อเมาส์ (Scroll) เพื่อเลื่อนดูส่วนล่างของหน้า A4", 45, 290);
+        ctx.fillText("4. กดปุ่ม 'พลิกหน้า' หรือลูกศรซ้าย-ขวาเพื่อเปลี่ยนหน้า", 45, 340);
+        ctx.fillStyle = "#047857";
+        ctx.fillText("▼ ส่วนล่างของกระดาษ A4 (ลองซูมแล้วลากลงมาดูตรงนี้) ▼", 45, 760);
+        return c.toDataURL("image/jpeg", 0.88);
       });
       return buildSimplePdf(canvases);
     }
@@ -1047,9 +1524,23 @@
       });
     }
 
+    function updateUnitSuggestions() {
+      const selectedSub = document.getElementById("book-subject").value;
+      const datalist = document.getElementById("unit-datalist");
+      const units = new Set();
+      state.books.filter(b => b.subjectId === selectedSub).forEach(b => {
+        if (b.unit) units.add(b.unit);
+      });
+      datalist.innerHTML = Array.from(units).sort((a, b) => a.localeCompare(b, "th", { numeric: true }))
+        .map(u => `<option value="${u}">`).join("");
+    }
+
     function populateAdminData() {
       const sel = document.getElementById("book-subject");
+      const prevSubVal = sel.value;
       sel.innerHTML = state.subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
+      if (prevSubVal && state.subjects.some(s => s.id === prevSubVal)) sel.value = prevSubVal;
+      updateUnitSuggestions();
 
       document.getElementById("admin-subjects-list").innerHTML = state.subjects.map(s => `
         <div class="p-3.5 rounded-2xl border border-emerald-100 bg-white flex items-center justify-between">
@@ -1068,10 +1559,18 @@
 
       document.getElementById("admin-books-tbody").innerHTML = state.books.map(b => {
         const sub = state.subjects.find(s => s.id === b.subjectId);
+        const mType = b.mediaType || "ebook";
+        const meta = MEDIA_META[mType] || MEDIA_META.ebook;
         return `
           <tr class="hover:bg-emerald-50/40">
+            <td class="p-3 whitespace-nowrap">
+              <span class="text-[11px] font-semibold px-2 py-0.5 rounded-lg border ${meta.badgeClass}">${meta.label}</span>
+            </td>
             <td class="p-3 font-medium text-slate-800">${b.title}</td>
-            <td class="p-3 text-xs text-slate-600">${sub ? sub.name : "-"}</td>
+            <td class="p-3 text-xs">
+              <div class="font-semibold text-slate-700">${sub ? sub.name : "-"}</div>
+              <div class="text-emerald-700">${b.unit || "หน่วยการเรียนรู้ทั่วไป"}</div>
+            </td>
             <td class="p-3 text-center font-semibold text-emerald-700">${b.views || 0}</td>
             <td class="p-3 text-center">
               <button onclick="toggleBookVisible('${b.id}')" title="คลิกเพื่อสลับสถานะลงชีตทันที"
@@ -1099,7 +1598,7 @@
 
       const sheetInfoEl = document.getElementById("active-sheet-info");
       if (state.activeSheetUrl) {
-        sheetInfoEl.innerHTML = `ฐานข้อมูลอัตโนมัติพร้อมใช้งาน: <a href="${state.activeSheetUrl}" target="_blank" class="underline font-semibold">เปิดดูไฟล์ Google Sheets</a>`;
+        sheetInfoEl.innerHTML = `ฐานข้อมูลกลางพร้อมใช้งาน: <a href="${state.activeSheetUrl}" target="_blank" class="underline font-semibold">เปิดดูไฟล์ Google Sheets</a>`;
       } else {
         sheetInfoEl.textContent = state.activeSheetId ? `Sheet ID: ${state.activeSheetId}` : "";
       }
@@ -1110,7 +1609,47 @@
       lucide.createIcons();
     }
 
-    // ==================== BOOK & SUBJECT CRUD (REAL-TIME) ====================
+    // ==================== BOOK & SUBJECT CRUD ====================
+    function updateMediaFormUI() {
+      const mType = document.getElementById("book-media-type").value;
+      const uploadBox = document.getElementById("field-upload-box");
+      const urlBox = document.getElementById("field-url-box");
+      const urlLabel = document.getElementById("label-fileid-url");
+      const urlInput = document.getElementById("book-fileid");
+
+      if (mType === "ebook") {
+        uploadBox.classList.remove("hidden");
+        urlBox.classList.remove("md:col-span-2");
+        urlLabel.textContent = "หรือ วางลิงก์ / File ID PDF จาก Google Drive";
+        urlInput.placeholder = "วางลิงก์แชร์ไฟล์ PDF จาก Google Drive หรือ File ID";
+      } else if (mType === "video") {
+        uploadBox.classList.add("hidden");
+        urlBox.classList.add("md:col-span-2");
+        urlLabel.textContent = "วางลิงก์วิดีโอ YouTube หรือลิงก์วิดีโอใน Google Drive * (ดึงหน้าปก YouTube อัตโนมัติ)";
+        urlInput.placeholder = "เช่น https://www.youtube.com/watch?v=... หรือลิงก์ Google Drive";
+      } else if (mType === "document") {
+        uploadBox.classList.remove("hidden");
+        urlBox.classList.remove("md:col-span-2");
+        urlLabel.textContent = "หรือ วางลิงก์ Google Docs / Slides / Canva / PDF Drive";
+        urlInput.placeholder = "วางลิงก์เอกสารออนไลน์ หรือไฟล์ใน Google Drive";
+      } else if (mType === "link") {
+        uploadBox.classList.add("hidden");
+        urlBox.classList.add("md:col-span-2");
+        urlLabel.textContent = "วางลิงก์ใบงานออนไลน์ / Google Forms / แบบทดสอบ *";
+        urlInput.placeholder = "เช่น https://forms.gle/... หรือ https://www.tinkercad.com/...";
+      }
+    }
+
+    function handleMediaUrlInput(val) {
+      const mType = document.getElementById("book-media-type").value;
+      if (mType === "video") {
+        const ytId = extractYouTubeId(val);
+        if (ytId) {
+          state.pendingCoverBase64 = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+        }
+      }
+    }
+
     async function previewPdfCover(input) {
       const file = input.files[0];
       if (!file) return;
@@ -1136,7 +1675,11 @@
       try {
         const fileInput = document.getElementById("book-file");
         let pdfBase64 = "";
+        let fileName = "";
+        let fileMimeType = "";
         if (fileInput.files[0]) {
+          fileName = fileInput.files[0].name;
+          fileMimeType = fileInput.files[0].type || "application/pdf";
           pdfBase64 = await new Promise((resolve) => {
             const reader = new FileReader();
             reader.onload = () => resolve(reader.result.split(",")[1]);
@@ -1144,15 +1687,26 @@
           });
         }
 
+        const mType = document.getElementById("book-media-type").value;
+        const urlVal = document.getElementById("book-fileid").value.trim();
+        if (mType === "video" && !state.pendingCoverBase64) {
+          const ytId = extractYouTubeId(urlVal);
+          if (ytId) state.pendingCoverBase64 = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+        }
+
         const payload = {
           action: "saveBook",
           data: {
             id: document.getElementById("book-id").value,
-            title: document.getElementById("book-title").value.trim(),
             subjectId: document.getElementById("book-subject").value,
+            unit: document.getElementById("book-unit").value.trim(),
+            mediaType: mType,
+            title: document.getElementById("book-title").value.trim(),
             description: document.getElementById("book-desc").value.trim(),
-            fileId: document.getElementById("book-fileid").value.trim(),
+            fileId: urlVal,
             pdfBase64: pdfBase64,
+            fileName: fileName,
+            fileMimeType: fileMimeType,
             cover: state.pendingCoverBase64,
             visible: document.getElementById("book-visible").checked
           }
@@ -1160,37 +1714,47 @@
 
         await postRealtimeAction(payload);
         resetBookForm();
-        showMessage("บันทึกสำเร็จ", "บันทึกข้อมูลและอัปเดตลง Google Sheets ทันทีเรียบร้อยแล้ว");
+        showMessage("บันทึกสำเร็จ", "บันทึกสื่อการสอนและจัดเข้าหน่วยการเรียนรู้ลง Google Sheets เรียบร้อยแล้ว");
       } catch (err) {
         showMessage("บันทึกไม่สำเร็จ", err.message, true);
       } finally {
-        btn.disabled = false; btn.textContent = "บันทึกหนังสือ E-Book";
+        btn.disabled = false; btn.textContent = "บันทึกสื่อการสอน";
       }
     }
 
     function editBook(id) {
       const b = state.books.find(x => x.id === id);
       if (!b) return;
-      document.getElementById("book-form-title").textContent = "แก้ไขข้อมูลหนังสือ E-Book";
+      document.getElementById("book-form-title").textContent = "แก้ไขข้อมูลสื่อการสอน";
       document.getElementById("book-id").value = b.id;
-      document.getElementById("book-title").value = b.title;
       document.getElementById("book-subject").value = b.subjectId;
+      updateUnitSuggestions();
+      document.getElementById("book-unit").value = b.unit || "หน่วยการเรียนรู้ทั่วไป";
+      document.getElementById("book-media-type").value = b.mediaType || "ebook";
+      updateMediaFormUI();
+      document.getElementById("book-title").value = b.title;
       document.getElementById("book-desc").value = b.description || "";
       document.getElementById("book-fileid").value = b.fileId || "";
       document.getElementById("book-visible").checked = b.visible;
     }
 
     function resetBookForm() {
+      const keepSub = document.getElementById("book-subject").value;
+      const keepUnit = document.getElementById("book-unit").value;
       document.getElementById("book-form").reset();
       document.getElementById("book-id").value = "";
-      document.getElementById("book-form-title").textContent = "+ เพิ่มหนังสือ E-Book ใหม่";
+      document.getElementById("book-subject").value = keepSub;
+      document.getElementById("book-unit").value = keepUnit;
+      document.getElementById("book-media-type").value = "ebook";
+      updateMediaFormUI();
+      document.getElementById("book-form-title").textContent = "+ เพิ่มสื่อการสอน / E-Book ใหม่";
       state.pendingCoverBase64 = "";
     }
 
     async function deleteBook(id) {
       try {
         await postRealtimeAction({ action: "deleteBook", id: id });
-        showMessage("ลบข้อมูลสำเร็จ", "ลบรายการหนังสือออกจาก Google Sheets ทันทีเรียบร้อยแล้ว");
+        showMessage("ลบข้อมูลสำเร็จ", "ลบรายการสื่อออกจาก Google Sheets ทันทีเรียบร้อยแล้ว");
       } catch (err) {
         showMessage("ลบไม่สำเร็จ", err.message, true);
       }
@@ -1238,7 +1802,7 @@
       }
     }
 
-    // ==================== SYSTEM SETTINGS, BACKUP, RESTORE, RESET ====================
+    // ==================== SYSTEM SETTINGS ====================
     async function saveSystemConfig() {
       const scriptUrl = document.getElementById("cfg-script-url").value.trim();
       const sheetId = extractDriveId(document.getElementById("cfg-sheet-id").value);
@@ -1259,7 +1823,7 @@
             folderId: folderId,
             data: { SchoolName: schoolName, AdminPIN: adminPin, DriveFolderId: folderId }
           });
-          showMessage("บันทึกสำเร็จ", "บันทึกการตั้งค่าระบบและพาทจัดเก็บไฟล์ลง Google Sheets เรียบร้อยแล้ว");
+          showMessage("บันทึกสำเร็จ", "บันทึกการตั้งค่าลง Server เรียบร้อยแล้ว ทุกอุปกรณ์จะใช้ฐานข้อมูลชุดเดียวกัน");
         } catch (err) {
           showMessage("แจ้งเตือน", "บันทึกการตั้งค่าลงเครื่องแล้ว แต่ไม่สามารถอัปเดตลง Google Sheets ได้: " + err.message, true);
         }
@@ -1276,7 +1840,14 @@
       if (state.config.folderId) shareUrl.searchParams.set("fid", state.config.folderId);
 
       navigator.clipboard.writeText(shareUrl.toString()).then(() => {
-        showMessage("คัดลอกลิงก์แล้ว", "นำลิงก์นี้ส่งให้นักเรียนได้เลย ระบบจะเชื่อมต่อฐานข้อมูลให้อัตโนมัติ");
+        showMessage("คัดลอกลิงก์สำหรับมือถือ/แท็บเล็ตแล้ว", shareUrl.toString());
+      });
+    }
+
+    function copyPermanentConfigCode() {
+      const codeSnippet = `const DEFAULT_CONFIG = {\n  scriptUrl: "${state.config.scriptUrl || ''}",\n  sheetId: "${state.config.sheetId || ''}",\n  folderId: "${state.config.folderId || ''}"\n};`;
+      navigator.clipboard.writeText(codeSnippet).then(() => {
+        showMessage("คัดลอกโค้ดฝังถาวรแล้ว", "นำโค้ดด้านล่างไปวางทับตัวแปร DEFAULT_CONFIG ในไฟล์ index.html บน GitHub เพื่อให้เปิดลิงก์สั้นๆ ได้ทุกเครื่องทันที:\n\n" + codeSnippet);
       });
     }
 
